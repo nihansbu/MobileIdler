@@ -1,6 +1,8 @@
 import {
   Activity,
   BarChart3,
+  ChevronDown,
+  ChevronUp,
   CheckCircle2,
   CircleUserRound,
   Coins,
@@ -19,6 +21,8 @@ export const Icons = {
   activity: Activity,
   account: UserRound,
   bars: BarChart3,
+  chevronDown: ChevronDown,
+  chevronUp: ChevronUp,
   check: CheckCircle2,
   characters: UsersRound,
   coins: Coins,

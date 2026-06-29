@@ -475,6 +475,8 @@ Design priorities:
 - Modular pages where each major system can still have a specialized interface.
 - Early implementation UI should be minimal, functional, and alpha/testing-friendly while mechanics and values are still changing.
 - Use reusable app-shell components such as bottom navigation, headers, cards, rows, segmented controls, and action buttons.
+- Top bar and bottom navigation should stay visible while the body content scrolls.
+- Top bar and bottom navigation should be separately collapsible to free more body space on mobile.
 - Character creation can become visually richer later, but should start as a simple data-driven wizard.
 - Race selection should initially use clear labels, descriptions, passives, and allowed classes; race-specific backgrounds can come later.
 - Class selection should show available classes for the selected race, locked classes, class passives, and unlock requirements where applicable.
@@ -593,6 +595,8 @@ Current MVP status:
 - Character creation supports Human, Orc, Undead, Warrior, Paladin, and Mage with starter restrictions.
 - Character creation is launched from the Account screen rather than a separate Characters nav item.
 - Character cards show XP progress and active activity timers.
+- Top bar and bottom navigation remain visible while the middle body scrolls.
+- Top bar and bottom navigation can be collapsed or expanded separately.
 - Activity assignment supports Explore First Region, Train Endurance, and Fight Training Dummy.
 - Activity category tabs filter visible activities.
 - Activities cost RAP, assign the character, and resolve from timestamps when complete.

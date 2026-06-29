@@ -240,6 +240,7 @@ Confirmed current state:
 - User workflow preference added on 2026-06-29: do not run a full deploy cycle for a tiny isolated UI fix when it can be bundled with useful feature work.
 - Account UI decision added on 2026-06-29: character management belongs inside the Account screen, not as a primary bottom-nav item.
 - Character slot UX decision added on 2026-06-29: buying/unlocking a character slot must not automatically prompt character creation. It should only make capacity available; the player creates a character later by pressing a Create button.
+- Mobile shell decision added on 2026-06-29: the top bar and bottom navigation should remain visible while only the body content scrolls. Top bar and bottom navigation can be collapsed and expanded separately to give the body more space.
 
 Required documentation workflow:
 
@@ -258,6 +259,7 @@ Required publish workflow:
 - If the Pages run fails, fix the deployment problem before calling the work complete.
 - For image-only messages, respond with an observation/description only unless the user also asks for a change.
 - If Vite serves a stale deleted module after a structural refactor, start a fresh dev server on a new port and test there instead of debugging a phantom source import.
+- For layout changes, verify that `body` is not the scroll container and `.screen` is the scroll container in a mobile Playwright viewport.
 
 ## Known Working Commands
 
@@ -430,6 +432,48 @@ Files involved:
 - `src/screens/AccountScreen.tsx`
 - `src/screens/ActivitiesScreen.tsx`
 - `src/game/simulation.ts`
+- `src/styles.css`
+- `project_memory.md`
+- `game_design.md`
+
+### Collapsible Fixed Mobile App Shell
+
+Problem: The top bar and bottom navigation scrolled away with the page body, which made the mobile app feel less like a persistent game UI. The user wanted both bars to stay visible and to be separately collapsible so the body can gain more usable space.
+
+Successful solution: Updated `AppShell` and layout CSS so the app uses a fixed-height `100dvh` shell with `overflow: hidden`, while `.screen` is the only scroll container. Added independent React state for top bar collapse and bottom navigation collapse. Each collapsed bar leaves a compact visible toggle so it can be expanded again.
+
+Important implementation details:
+
+- `src/components/AppShell.tsx` owns `isTopCollapsed` and `isNavCollapsed`.
+- Expanded top bar shows account name, RAP, and a collapse button.
+- Collapsed top bar shows compact account/RAP text and an expand button.
+- Expanded bottom shell shows a small collapse strip plus the primary nav.
+- Collapsed bottom shell shows the current active view and an expand button.
+- `src/styles.css` sets `.app-shell` to `height: 100dvh` and `.screen` to `overflow: auto`.
+
+Commands used:
+
+```powershell
+npm run build
+```
+
+```powershell
+npm run dev -- --port 5175
+```
+
+Local browser smoke test covered:
+
+- Account setup and character creation still work.
+- `body` is not the scroll container.
+- `.screen` is the scroll container.
+- Top bar collapses and expands.
+- Bottom navigation collapses and expands separately.
+- Bottom navigation still contains Account, Activities, and Progress after expanding.
+
+Files involved:
+
+- `src/components/AppShell.tsx`
+- `src/components/icons.tsx`
 - `src/styles.css`
 - `project_memory.md`
 - `game_design.md`
