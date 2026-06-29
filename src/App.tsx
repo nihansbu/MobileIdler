@@ -4,9 +4,11 @@ import { AccountSetup } from './screens/AccountSetup';
 import { AccountScreen } from './screens/AccountScreen';
 import { ActivitiesScreen } from './screens/ActivitiesScreen';
 import { ProgressScreen } from './screens/ProgressScreen';
+import { SkillsScreen } from './screens/SkillsScreen';
 import { createDefaultAccount, loadAccount, parseAccountBackup, resetAccount, saveAccount } from './game/save';
 import { canUnlockSecondSlot, resolveCompletedActivities } from './game/simulation';
 import { getActivity } from './game/content';
+import { areRequirementsMet } from './game/requirements';
 import type { AccountSave, ActivityId, CharacterSave, ViewId } from './types';
 
 export function App() {
@@ -52,7 +54,8 @@ export function App() {
   const startActivity = (characterId: string, activityId: ActivityId) => {
     updateAccount((current) => {
       const activity = getActivity(activityId);
-      if (current.rap < activity.rapCost) {
+      const character = current.characters.find((candidate) => candidate.id === characterId);
+      if (!character || character.activity || current.rap < activity.rapCost || !areRequirementsMet(current, activity.requirements)) {
         return current;
       }
 
@@ -69,6 +72,7 @@ export function App() {
                   startedAt: now,
                   endsAt: now + activity.durationMinutes * 60 * 1000,
                   rapCost: activity.rapCost,
+                  resolvedTicks: 0,
                 },
               }
             : character,
@@ -121,6 +125,7 @@ export function App() {
         />
       )}
       {activeView === 'activities' && <ActivitiesScreen account={account} onStartActivity={startActivity} />}
+      {activeView === 'skills' && <SkillsScreen account={account} />}
       {activeView === 'progress' && <ProgressScreen account={account} onImportBackup={importBackup} onReset={hardReset} />}
     </AppShell>
   );

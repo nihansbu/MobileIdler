@@ -175,7 +175,7 @@ button:disabled {
   min-height: 72px;
   padding-bottom: env(safe-area-inset-bottom);
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
 }
 
 .nav-item {
@@ -256,10 +256,14 @@ button:disabled {
 .log-row span,
 .log-row small,
 .activity-body p,
+.activity-card span,
 .field span,
 .choice span,
 .detail-box span,
 .meta-grid span,
+.skill-row span,
+.track-row span,
+.reward-list span,
 .hint {
   color: var(--muted);
 }
@@ -541,6 +545,19 @@ button:disabled {
   gap: 10px;
 }
 
+.activity-card {
+  display: grid;
+  gap: 13px;
+}
+
+.activity-card-head,
+.skill-row-main {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+
 .activity-body {
   min-width: 0;
   display: grid;
@@ -563,6 +580,73 @@ button:disabled {
   min-width: 70px;
 }
 
+.track-grid {
+  display: grid;
+  gap: 7px;
+}
+
+.track-row {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 9px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.track-row strong {
+  white-space: nowrap;
+}
+
+.reward-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.reward-list span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
+.skill-list {
+  display: grid;
+  gap: 9px;
+}
+
+.skill-row {
+  display: grid;
+  gap: 10px;
+}
+
+.locked-skill {
+  opacity: 0.72;
+}
+
+.locked-skill .progress-fill {
+  background: var(--line-strong);
+}
+
+.skill-level {
+  text-align: right;
+  display: grid;
+  gap: 2px;
+}
+
+.skill-level strong {
+  font-size: 24px;
+}
+
+.progress-card {
+  display: grid;
+  gap: 9px;
+}
+
 .roster-row,
 .log-row {
   align-items: start;
@@ -583,7 +667,9 @@ button:disabled {
   .unlock-card,
   .selected-character,
   .activity-row,
-  .character-main-row {
+  .character-main-row,
+  .activity-card-head,
+  .skill-row-main {
     grid-template-columns: 1fr;
   }
 

@@ -1,10 +1,44 @@
 export type RaceId = 'human' | 'orc' | 'undead';
 export type ClassId = 'warrior' | 'paladin' | 'mage';
-export type ActivityId = 'explore_first_region' | 'train_endurance' | 'fight_training_dummy';
+export type SkillId =
+  | 'attack'
+  | 'strength'
+  | 'defence'
+  | 'constitution'
+  | 'ranged'
+  | 'magic'
+  | 'prayer'
+  | 'summoning'
+  | 'necromancy'
+  | 'perception'
+  | 'mining'
+  | 'smithing'
+  | 'fishing'
+  | 'cooking'
+  | 'firemaking'
+  | 'woodcutting'
+  | 'crafting'
+  | 'fletching'
+  | 'runecrafting'
+  | 'construction'
+  | 'agility'
+  | 'herblore'
+  | 'thieving'
+  | 'slayer'
+  | 'farming'
+  | 'hunter'
+  | 'divination'
+  | 'dungeoneering'
+  | 'invention'
+  | 'archaeology'
+  | 'sailing';
 
-export type ViewId = 'account' | 'activities' | 'progress';
+export type ActivityId = 'explore_old_road';
+
+export type ViewId = 'account' | 'activities' | 'skills' | 'progress';
 
 export type CharacterStatus = 'idle' | 'busy';
+export type ActivityModule = 'explore';
 
 export interface PassiveDefinition {
   id: string;
@@ -27,14 +61,51 @@ export interface ClassDefinition {
   passives: PassiveDefinition[];
 }
 
+export interface SkillDefinition {
+  id: SkillId;
+  name: string;
+  category: 'combat' | 'gathering' | 'artisan' | 'support' | 'elite';
+  description: string;
+  unlockTotalLevel?: number;
+}
+
+export type RequirementDefinition =
+  | {
+      type: 'skillLevel';
+      skillId: SkillId;
+      level: number;
+    }
+  | {
+      type: 'combatLevel';
+      level: number;
+    };
+
+export type RewardDefinition = {
+  type: 'skillXp';
+  skillId: SkillId;
+  amount: number;
+};
+
+export interface DiscoveryTrackDefinition {
+  id: string;
+  label: string;
+  max: number;
+  chancePerTick: number;
+}
+
 export interface ActivityDefinition {
   id: ActivityId;
+  module: ActivityModule;
   name: string;
-  category: 'explore' | 'train' | 'combat';
+  regionName: string;
   durationMinutes: number;
   rapCost: number;
+  tickIntervalSeconds: number;
   description: string;
-  rewardLabel: string;
+  requirements: RequirementDefinition[];
+  repeatRewards: RewardDefinition[];
+  discoveryTracks: DiscoveryTrackDefinition[];
+  completionRewardLabel: string;
 }
 
 export interface ActiveActivity {
@@ -42,6 +113,7 @@ export interface ActiveActivity {
   startedAt: number;
   endsAt: number;
   rapCost: number;
+  resolvedTicks: number;
 }
 
 export interface CharacterSave {
@@ -49,9 +121,12 @@ export interface CharacterSave {
   name: string;
   raceId: RaceId;
   classId: ClassId;
-  level: number;
-  xp: number;
   activity: ActiveActivity | null;
+}
+
+export interface RegionProgressSave {
+  tracks: Record<string, number>;
+  completed: boolean;
 }
 
 export interface ActivityLogEntry {
@@ -63,13 +138,16 @@ export interface ActivityLogEntry {
 }
 
 export interface AccountSave {
-  schemaVersion: 1;
+  schemaVersion: 2;
   accountName: string;
   rap: number;
   characterSlots: number;
   characters: CharacterSave[];
   completedActivities: number;
   unlockedRaceClassCombos: string[];
+  skillXp: Record<SkillId, number>;
+  unlockedSkillIds: SkillId[];
+  regionProgress: Record<string, RegionProgressSave>;
   activityLog: ActivityLogEntry[];
   updatedAt: number;
 }

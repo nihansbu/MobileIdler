@@ -43,8 +43,6 @@ export function CharacterCreator({ account, onCancel, onCreateCharacter }: Chara
       name: name.trim() || 'Aetheron',
       raceId,
       classId,
-      level: 1,
-      xp: 0,
       activity: null,
     });
   };

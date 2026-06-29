@@ -226,8 +226,9 @@ Implementation plan for the next coding step:
 3. Add a schema migration or defensive initialization path for existing localStorage saves.
 4. Add shared requirement and reward types plus evaluator/applicator helpers.
 5. Add combat level and total level selectors derived from account skills.
-6. Add a dedicated Skills screen or subpage and expose it through navigation.
-7. Keep old MVP character XP/level only as temporary legacy UI until combat level fully replaces it.
+6. Add an Explore module with region definitions, discovery tracks, and tick-based resolution.
+7. Add a dedicated Skills screen or subpage and expose it through navigation.
+8. Remove old MVP character XP/level from visible UI rather than migrating it.
 
 ## Character Creation Architecture
 
@@ -349,6 +350,15 @@ Confirmed current state:
 - Mobile shell update added on 2026-06-29: top bar and bottom navigation collapse/expand through matching thin arrow rows. The top arrow row sits below the top bar; the bottom arrow row sits above the bottom nav.
 - RAP prototype button decision added on 2026-06-29: the large Account-screen `+10,000 RAP` button is removed. The player gains 10,000 RAP by pressing the plus button in the top bar.
 - Activity screen UX decision added on 2026-06-29: the activity catalog must remain visible even when there is no idle character or no character exists yet. In those states, start buttons are disabled instead of hiding the content.
+- Activity architecture decision added on 2026-06-29: `Activity` is the umbrella term for character-executed game actions. Activities should be grouped into modules, with Explore as the first real module.
+- Explore module decision added on 2026-06-29: regions use tick-based simulation. Each region can define requirements, RAP cost, duration, tick interval, repeat rewards, discovery tracks, and completion rewards.
+- Region discovery decision added on 2026-06-29: early region content can be represented by counters such as Region Quests, Treasures, Points of Interest, World Bosses, and Secrets. These counters do not need fully authored objects at first.
+- Reward timing decision added on 2026-06-29: long activities should not grant only one final reward. They should roll repeat rewards and discovery chances per simulation tick, with offline progress resolved by elapsed tick count.
+- Combat requirement decision added on 2026-06-29: combat level is displayed with decimals but requirements use whole levels, checked against the floored combat level.
+- Implemented on 2026-06-29: save schema v2 with account-wide skill XP, unlocked skill IDs, region progress, and active activity resolved tick counts.
+- Implemented on 2026-06-29: first Skills screen exposed in the bottom navigation.
+- Implemented on 2026-06-29: first Explore module slice with Old Road, tick rewards, discovery tracks, and offline tick resolution.
+- Implemented on 2026-06-29: old visible Character XP/level UI was removed instead of migrated. Characters now display race/class, shared combat level, and current activity/tick state.
 
 Required documentation workflow:
 
@@ -511,9 +521,9 @@ Important implementation details:
 - `CharacterCreator` is a reusable component under `src/components/`.
 - `AccountScreen` controls whether the creation panel is open.
 - Unlocking the second slot only increases `characterSlots`; it does not open the creation panel.
-- Character cards show level, race, class, idle/busy status, XP progress, and active activity remaining time.
-- `xpForNextLevel` is exported from `src/game/simulation.ts` so UI and simulation use the same level threshold.
-- Activity log entries now mention level gains when a completed activity causes a level-up.
+- Superseded on 2026-06-29: character cards no longer show character level/XP. They now show race/class, shared combat level, status, and active activity tick state.
+- Superseded on 2026-06-29: `xpForNextLevel` and visible character XP were removed when account-wide skills were implemented.
+- Superseded on 2026-06-29: activity logs no longer mention character level gains; they now log activity completion and region discoveries.
 - Activity category tabs now filter the visible activities.
 
 Commands used:
@@ -637,6 +647,76 @@ Important implementation details:
 
 Files involved:
 
+- `project_memory.md`
+- `game_design.md`
+
+### Account-Wide Skills And Explore Tick MVP
+
+Problem: The app needed to become more playable than the initial placeholder activities. The user wanted account-wide RuneScape-style skills, whole-number combat-level gates with decimal display, and an Explore module where regions progress through repeated discovery rolls instead of one final reward.
+
+Successful solution: Implemented save schema v2 and the first real progression slice:
+
+- Account-wide skill XP for the full skill roster.
+- RuneScape-style XP curve from level 1 to 120, with XP continuing to 200,000,000.
+- Skills screen in the bottom navigation.
+- Locked skill display for Invention, Necromancy, and Sailing until total level 800.
+- Account-wide combat level display with two decimals.
+- Combat level requirements use whole levels via the floored combat level.
+- Character XP/level removed from visible UI instead of migrated.
+- Explore module with the first region, Old Road.
+- Old Road has tick-based rewards every 10 seconds for prototype testing.
+- Old Road discovery tracks: Region Quests, Treasures, Points of Interest, World Bosses, and Secrets.
+- Offline/reload progress resolves elapsed ticks and applies skill XP, discoveries, completion logs, and region progress.
+
+Important implementation details:
+
+- `src/types.ts` now uses `schemaVersion: 2`.
+- `src/game/save.ts` migrates v1 saves to v2 and initializes all account skills.
+- Old v1 placeholder active activities are discarded during migration because their content IDs no longer exist.
+- `src/game/skills.ts` owns XP thresholds, skill levels, total level, locked-skill checks, and combat level.
+- `src/game/requirements.ts` owns shared requirement checks and labels.
+- `src/game/simulation.ts` resolves ticks incrementally while the app is open and in aggregate after offline/reload.
+- `src/data/activities.ts` now defines Explore region content rather than generic placeholder activities.
+
+Commands used:
+
+```powershell
+npm run build
+```
+
+```powershell
+npm run dev -- --port 5176
+```
+
+Local browser smoke test covered:
+
+- Fresh account creation.
+- Character creation.
+- Adding RAP through the top bar.
+- Starting Explore Old Road.
+- Waiting for a live tick and confirming skill XP appears in Skills.
+- Confirming Old Road region progress appears in Progress.
+- Forcing a saved activity into the past and reloading to verify offline tick resolution.
+- Confirming completed activity count, region tracks, activity log, combat level, and total level update.
+- Mobile screenshot check at 393 x 852 with no visible overlap.
+
+Files involved:
+
+- `src/types.ts`
+- `src/data/activities.ts`
+- `src/data/skills.ts`
+- `src/game/save.ts`
+- `src/game/skills.ts`
+- `src/game/requirements.ts`
+- `src/game/simulation.ts`
+- `src/App.tsx`
+- `src/components/AppShell.tsx`
+- `src/components/CharacterCreator.tsx`
+- `src/screens/AccountScreen.tsx`
+- `src/screens/ActivitiesScreen.tsx`
+- `src/screens/SkillsScreen.tsx`
+- `src/screens/ProgressScreen.tsx`
+- `src/styles.css`
 - `project_memory.md`
 - `game_design.md`
 

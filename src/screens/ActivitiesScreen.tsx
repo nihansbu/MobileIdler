@@ -3,6 +3,8 @@ import { Icons } from '../components/icons';
 import { Button, EmptyState, Panel } from '../components/ui';
 import { activities } from '../data/activities';
 import { getClass, getRace } from '../game/content';
+import { areRequirementsMet, getRequirementsLabel } from '../game/requirements';
+import { getSkill } from '../game/skills';
 import type { AccountSave, ActivityId } from '../types';
 
 interface ActivitiesScreenProps {
@@ -10,19 +12,18 @@ interface ActivitiesScreenProps {
   onStartActivity: (characterId: string, activityId: ActivityId) => void;
 }
 
-const tabs = ['explore', 'train', 'combat'] as const;
+const formatTrackProgress = (account: AccountSave, activityId: ActivityId, trackId: string) =>
+  account.regionProgress[activityId]?.tracks[trackId] ?? 0;
 
 export function ActivitiesScreen({ account, onStartActivity }: ActivitiesScreenProps) {
   const idleCharacters = account.characters.filter((character) => !character.activity);
   const [characterId, setCharacterId] = useState(idleCharacters[0]?.id ?? '');
-  const [tab, setTab] = useState<(typeof tabs)[number]>('explore');
-
   const selectedCharacter = idleCharacters.find((character) => character.id === characterId) ?? idleCharacters[0];
   const hasAnyCharacter = account.characters.length > 0;
 
   return (
     <>
-      <h1 className="screen-title">Assign Activity</h1>
+      <h1 className="screen-title">Activities</h1>
 
       {selectedCharacter ? (
         <Panel className="selected-character">
@@ -40,7 +41,7 @@ export function ActivitiesScreen({ account, onStartActivity }: ActivitiesScreenP
       ) : (
         <EmptyState
           title={hasAnyCharacter ? 'No idle character' : 'No character'}
-          body={hasAnyCharacter ? 'Activities remain visible while every character is busy.' : 'Create a character before starting activities.'}
+          body={hasAnyCharacter ? 'Regions remain visible while every character is busy.' : 'Create a character before starting activities.'}
         />
       )}
 
@@ -57,44 +58,100 @@ export function ActivitiesScreen({ account, onStartActivity }: ActivitiesScreenP
         </label>
       )}
 
-      <div className="segmented">
-        {tabs.map((tabId) => (
-          <button key={tabId} className={tab === tabId ? 'active' : ''} type="button" onClick={() => setTab(tabId)}>
-            {tabId}
-          </button>
-        ))}
+      <div className="segmented module-tabs">
+        <button className="active" type="button">
+          Explore
+        </button>
+        <button disabled type="button">
+          Combat
+        </button>
+        <button disabled type="button">
+          Dungeons
+        </button>
       </div>
 
-      <div className="activity-list">
-        {activities
-          .filter((activity) => activity.category === tab)
-          .map((activity) => {
-          const canAfford = account.rap >= activity.rapCost;
-          const canStart = Boolean(selectedCharacter) && canAfford;
-          const statusLabel = !selectedCharacter ? 'No idle character' : canAfford ? 'Requirement met' : 'Need RAP';
-          const statusClass = canStart ? 'met' : 'blocked';
-          const disabledLabel = hasAnyCharacter ? 'Busy' : 'Locked';
-          const Icon = activity.category === 'explore' ? Icons.map : activity.category === 'train' ? Icons.endurance : Icons.combat;
-          return (
-            <Panel key={activity.id} className="activity-row">
-              <div className="activity-icon">
-                <Icon size={28} />
-              </div>
-              <div className="activity-body">
-                <strong>{activity.name}</strong>
+      <section className="section">
+        <h2>Explore Regions</h2>
+        <div className="activity-list">
+          {activities.map((activity) => {
+            const canAfford = account.rap >= activity.rapCost;
+            const requirementsMet = areRequirementsMet(account, activity.requirements);
+            const canStart = Boolean(selectedCharacter) && canAfford && requirementsMet;
+            const statusLabel = !selectedCharacter
+              ? 'No idle character'
+              : !requirementsMet
+                ? `Requires ${getRequirementsLabel(activity.requirements)}`
+                : canAfford
+                  ? 'Ready'
+                  : 'Need RAP';
+            const statusClass = canStart ? 'met' : 'blocked';
+            const disabledLabel = hasAnyCharacter ? 'Busy' : 'Locked';
+            const regionProgress = account.regionProgress[activity.id];
+            const totalDiscoveries = activity.discoveryTracks.reduce((sum, track) => sum + track.max, 0);
+            const currentDiscoveries = activity.discoveryTracks.reduce(
+              (sum, track) => sum + formatTrackProgress(account, activity.id, track.id),
+              0,
+            );
+
+            return (
+              <Panel key={activity.id} className="activity-card">
+                <div className="activity-card-head">
+                  <div className="activity-icon">
+                    <Icons.map size={28} />
+                  </div>
+                  <div>
+                    <strong>{activity.regionName}</strong>
+                    <span>{activity.description}</span>
+                  </div>
+                  <Button disabled={!canStart} onClick={() => selectedCharacter && onStartActivity(selectedCharacter.id, activity.id)}>
+                    {selectedCharacter ? 'Explore' : disabledLabel}
+                  </Button>
+                </div>
+
                 <div className="meta-grid">
-                  <span>Duration {activity.durationMinutes}m</span>
-                  <span>Cost RAP {activity.rapCost}</span>
+                  <span>{activity.durationMinutes}m run</span>
+                  <span>{activity.tickIntervalSeconds}s ticks</span>
+                  <span>RAP {activity.rapCost}</span>
                   <span className={statusClass}>{statusLabel}</span>
                 </div>
-              </div>
-              <Button disabled={!canStart} onClick={() => selectedCharacter && onStartActivity(selectedCharacter.id, activity.id)}>
-                {selectedCharacter ? 'Start' : disabledLabel}
-              </Button>
-            </Panel>
-          );
-        })}
-      </div>
+
+                <div className="progress-block">
+                  <div className="progress-label">
+                    <span>Region Discovery</span>
+                    <span>
+                      {currentDiscoveries} / {totalDiscoveries}
+                    </span>
+                  </div>
+                  <div className="progress-track">
+                    <div
+                      className="progress-fill"
+                      style={{ width: `${totalDiscoveries > 0 ? (currentDiscoveries / totalDiscoveries) * 100 : 0}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="track-grid">
+                  {activity.discoveryTracks.map((track) => (
+                    <div key={track.id} className="track-row">
+                      <span>{track.label}</span>
+                      <strong>
+                        {formatTrackProgress(account, activity.id, track.id)} / {track.max}
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="reward-list">
+                  {activity.repeatRewards.map((reward) => (
+                    <span key={`${reward.type}:${reward.skillId}`}>+{reward.amount} {getSkill(reward.skillId).name} XP / tick</span>
+                  ))}
+                  {regionProgress?.completed && <span className="met">Fully explored</span>}
+                </div>
+              </Panel>
+            );
+          })}
+        </div>
+      </section>
     </>
   );
 }

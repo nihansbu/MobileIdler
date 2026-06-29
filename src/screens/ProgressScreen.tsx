@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Button, EmptyState, Panel } from '../components/ui';
+import { getActivity } from '../game/content';
 import { serializeAccountBackup } from '../game/save';
-import type { AccountSave } from '../types';
+import { getCombatLevel, getTotalLevel } from '../game/skills';
+import type { AccountSave, ActivityId } from '../types';
 
 interface ProgressScreenProps {
   account: AccountSave;
@@ -13,6 +15,8 @@ export function ProgressScreen({ account, onImportBackup, onReset }: ProgressScr
   const [exportText, setExportText] = useState('');
   const [importText, setImportText] = useState('');
   const [backupMessage, setBackupMessage] = useState('');
+  const combatLevel = getCombatLevel(account);
+  const totalLevel = getTotalLevel(account);
 
   const prepareExport = () => {
     setExportText(serializeAccountBackup(account));
@@ -34,18 +38,42 @@ export function ProgressScreen({ account, onImportBackup, onReset }: ProgressScr
       <h1 className="screen-title">Progress</h1>
       <Panel className="summary-grid">
         <div className="stat">
-          <span>Characters</span>
-          <strong>{account.characters.length}</strong>
+          <span>Combat</span>
+          <strong>{combatLevel.toFixed(2)}</strong>
         </div>
         <div className="stat">
-          <span>Activities</span>
+          <span>Total</span>
+          <strong>{totalLevel}</strong>
+        </div>
+        <div className="stat">
+          <span>Done</span>
           <strong>{account.completedActivities}</strong>
         </div>
-        <div className="stat">
-          <span>Slots</span>
-          <strong>{account.characterSlots}</strong>
-        </div>
       </Panel>
+
+      <section className="section">
+        <h2>Regions</h2>
+        {Object.entries(account.regionProgress).length === 0 ? (
+          <EmptyState title="No region discoveries" body="Explore a region to uncover quests, treasures, points of interest, and secrets." />
+        ) : (
+          <div className="stack">
+            {Object.entries(account.regionProgress).map(([activityId, progress]) => {
+              const activity = getActivity(activityId as ActivityId);
+              return (
+                <Panel key={activityId} className="log-row">
+                  <strong>{activity.regionName}</strong>
+                  {activity.discoveryTracks.map((track) => (
+                    <span key={track.id}>
+                      {track.label}: {progress.tracks[track.id] ?? 0} / {track.max}
+                    </span>
+                  ))}
+                  <small>{progress.completed ? 'Fully explored' : 'In progress'}</small>
+                </Panel>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       <section className="section">
         <h2>Activity Log</h2>

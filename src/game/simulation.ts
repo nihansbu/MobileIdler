@@ -1,70 +1,168 @@
 import { getActivity } from './content';
-import type { AccountSave, ActivityLogEntry, CharacterSave } from '../types';
+import { addSkillXp } from './skills';
+import type { AccountSave, ActivityId, ActivityLogEntry, CharacterSave, RegionProgressSave, RewardDefinition } from '../types';
 
-export const xpForNextLevel = (level: number) => level * 100;
+const ACTIVITY_LOG_LIMIT = 30;
 
-const awardXp = (character: CharacterSave, xp: number): CharacterSave => {
-  let nextLevel = character.level;
-  let nextXp = character.xp + xp;
-
-  while (nextXp >= xpForNextLevel(nextLevel)) {
-    nextXp -= xpForNextLevel(nextLevel);
-    nextLevel += 1;
-  }
-
+const createEmptyRegionProgress = (activityId: string): RegionProgressSave => {
+  const activity = getActivity(activityId as ActivityId);
   return {
-    ...character,
-    level: nextLevel,
-    xp: nextXp,
+    completed: false,
+    tracks: activity.discoveryTracks.reduce(
+      (tracks, track) => ({
+        ...tracks,
+        [track.id]: 0,
+      }),
+      {},
+    ),
   };
 };
 
-const activityXp = (activityId: string) => {
-  switch (activityId) {
-    case 'train_endurance':
-      return 35;
-    case 'fight_training_dummy':
-      return 12;
-    default:
-      return 20;
-  }
+const getRegionProgress = (account: AccountSave, activityId: string) =>
+  account.regionProgress[activityId] ?? createEmptyRegionProgress(activityId);
+
+const isRegionComplete = (progress: RegionProgressSave, activityId: string) => {
+  const activity = getActivity(activityId as ActivityId);
+  return activity.discoveryTracks.every((track) => (progress.tracks[track.id] ?? 0) >= track.max);
 };
 
-export const resolveCompletedActivities = (account: AccountSave, now = Date.now()): AccountSave => {
-  const logEntries: ActivityLogEntry[] = [];
-  const characters = account.characters.map((character) => {
-    if (!character.activity || character.activity.endsAt > now) {
-      return character;
+const applyReward = (account: AccountSave, reward: RewardDefinition): AccountSave => {
+  if (reward.type === 'skillXp') {
+    return addSkillXp(account, reward.skillId, reward.amount);
+  }
+
+  return account;
+};
+
+const resolveExploreTick = (account: AccountSave, activityId: string, characterName: string, now: number): { account: AccountSave; logEntries: ActivityLogEntry[] } => {
+  const activity = getActivity(activityId as ActivityId);
+  let nextAccount = activity.repeatRewards.reduce(applyReward, account);
+  const currentProgress = getRegionProgress(nextAccount, activityId);
+  const nextTracks = { ...currentProgress.tracks };
+  const discoveries: string[] = [];
+
+  for (const track of activity.discoveryTracks) {
+    const currentValue = nextTracks[track.id] ?? 0;
+    if (currentValue >= track.max || Math.random() >= track.chancePerTick) {
+      continue;
     }
 
-    const activity = getActivity(character.activity.activityId);
-    const updated = awardXp(character, activityXp(activity.id));
-    const gainedLevels = updated.level - character.level;
-    logEntries.push({
+    nextTracks[track.id] = currentValue + 1;
+    discoveries.push(`${track.label} ${nextTracks[track.id]} / ${track.max}`);
+  }
+
+  const nextProgress: RegionProgressSave = {
+    tracks: nextTracks,
+    completed: currentProgress.completed || isRegionComplete({ ...currentProgress, tracks: nextTracks }, activityId),
+  };
+
+  const justCompleted = !currentProgress.completed && nextProgress.completed;
+  nextAccount = {
+    ...nextAccount,
+    regionProgress: {
+      ...nextAccount.regionProgress,
+      [activityId]: nextProgress,
+    },
+  };
+
+  const logEntries: ActivityLogEntry[] = discoveries.map((discovery) => ({
+    id: crypto.randomUUID(),
+    at: now,
+    characterName,
+    activityName: activity.name,
+    result: `Discovered ${discovery}`,
+  }));
+
+  if (justCompleted) {
+    logEntries.unshift({
+      id: crypto.randomUUID(),
+      at: now,
+      characterName,
+      activityName: activity.name,
+      result: `Fully explored ${activity.regionName}`,
+    });
+  }
+
+  return { account: nextAccount, logEntries };
+};
+
+const resolveCharacterActivity = (
+  account: AccountSave,
+  character: CharacterSave,
+  now: number,
+): { account: AccountSave; character: CharacterSave; logEntries: ActivityLogEntry[]; completed: boolean } => {
+  if (!character.activity) {
+    return { account, character, logEntries: [], completed: false };
+  }
+
+  const activity = getActivity(character.activity.activityId);
+  const elapsedMs = Math.max(0, Math.min(now, character.activity.endsAt) - character.activity.startedAt);
+  const targetResolvedTicks = Math.floor(elapsedMs / (activity.tickIntervalSeconds * 1000));
+  const totalTicks = Math.floor((activity.durationMinutes * 60) / activity.tickIntervalSeconds);
+  const boundedTargetTicks = Math.min(totalTicks, targetResolvedTicks);
+  const ticksToResolve = Math.max(0, boundedTargetTicks - character.activity.resolvedTicks);
+
+  let nextAccount = account;
+  const logEntries: ActivityLogEntry[] = [];
+
+  for (let index = 0; index < ticksToResolve; index += 1) {
+    const resolved = resolveExploreTick(nextAccount, activity.id, character.name, now);
+    nextAccount = resolved.account;
+    logEntries.push(...resolved.logEntries);
+  }
+
+  const completed = character.activity.endsAt <= now;
+  if (completed) {
+    logEntries.unshift({
       id: crypto.randomUUID(),
       at: now,
       characterName: character.name,
       activityName: activity.name,
-      result: gainedLevels > 0 ? `${activity.rewardLabel}. Level +${gainedLevels}` : activity.rewardLabel,
+      result: `${activity.completionRewardLabel}. ${boundedTargetTicks} ticks resolved.`,
     });
+  }
 
-    return {
-      ...updated,
-      activity: null,
-    };
+  return {
+    account: nextAccount,
+    character: {
+      ...character,
+      activity: completed
+        ? null
+        : {
+            ...character.activity,
+            resolvedTicks: boundedTargetTicks,
+          },
+    },
+    logEntries,
+    completed,
+  };
+};
+
+export const resolveCompletedActivities = (account: AccountSave, now = Date.now()): AccountSave => {
+  let nextAccount = account;
+  const logEntries: ActivityLogEntry[] = [];
+  let completedActivities = 0;
+
+  const characters = account.characters.map((character) => {
+    const resolved = resolveCharacterActivity(nextAccount, character, now);
+    nextAccount = resolved.account;
+    logEntries.push(...resolved.logEntries);
+    if (resolved.completed) {
+      completedActivities += 1;
+    }
+    return resolved.character;
   });
 
-  if (logEntries.length === 0) {
+  if (logEntries.length === 0 && completedActivities === 0 && characters.every((character, index) => character === account.characters[index])) {
     return account;
   }
 
   return {
-    ...account,
+    ...nextAccount,
     characters,
-    completedActivities: account.completedActivities + logEntries.length,
-    activityLog: [...logEntries, ...account.activityLog].slice(0, 20),
+    completedActivities: account.completedActivities + completedActivities,
+    activityLog: [...logEntries, ...account.activityLog].slice(0, ACTIVITY_LOG_LIMIT),
   };
 };
 
-export const canUnlockSecondSlot = (account: AccountSave) =>
-  account.characterSlots === 1 && account.rap >= 2000;
+export const canUnlockSecondSlot = (account: AccountSave) => account.characterSlots === 1 && account.rap >= 2000;

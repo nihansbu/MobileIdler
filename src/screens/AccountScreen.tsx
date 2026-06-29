@@ -3,8 +3,9 @@ import { CharacterCreator } from '../components/CharacterCreator';
 import { Icons } from '../components/icons';
 import { Button, EmptyState, Panel, Stat } from '../components/ui';
 import { getActivity, getClass, getRace } from '../game/content';
-import { canUnlockSecondSlot, xpForNextLevel } from '../game/simulation';
-import type { AccountSave, CharacterSave } from '../types';
+import { canUnlockSecondSlot } from '../game/simulation';
+import { getCombatLevel, getTotalLevel } from '../game/skills';
+import type { AccountSave, ActivityId, CharacterSave } from '../types';
 
 interface AccountScreenProps {
   account: AccountSave;
@@ -25,6 +26,8 @@ export function AccountScreen({ account, now, onCreateCharacter, onUnlockSlot, o
   const [isCreatingCharacter, setIsCreatingCharacter] = useState(false);
   const idleCharacters = account.characters.filter((character) => !character.activity);
   const hasFreeSlot = account.characters.length < account.characterSlots;
+  const combatLevel = getCombatLevel(account);
+  const totalLevel = getTotalLevel(account);
 
   const createCharacter = (character: CharacterSave) => {
     onCreateCharacter(character);
@@ -35,9 +38,9 @@ export function AccountScreen({ account, now, onCreateCharacter, onUnlockSlot, o
     <>
       <h1 className="screen-title">Account</h1>
       <Panel className="summary-grid">
-        <Stat label="RAP" value={account.rap.toLocaleString()} />
+        <Stat label="Combat" value={combatLevel.toFixed(2)} />
+        <Stat label="Total" value={totalLevel} />
         <Stat label="Slots" value={`${account.characters.length} / ${account.characterSlots}`} />
-        <Stat label="Done" value={account.completedActivities} />
       </Panel>
 
       <section className="section">
@@ -74,8 +77,9 @@ export function AccountScreen({ account, now, onCreateCharacter, onUnlockSlot, o
                   <div>
                     <strong>{character.name}</strong>
                     <span>
-                      Lvl {character.level} - {getRace(character.raceId).name} {getClass(character.classId).name}
+                      {getRace(character.raceId).name} {getClass(character.classId).name}
                     </span>
+                    <span>Combat Level {combatLevel.toFixed(2)}</span>
                     <span className={character.activity ? 'status busy' : 'status idle'}>
                       {character.activity ? 'Busy' : 'Idle'}
                     </span>
@@ -86,20 +90,11 @@ export function AccountScreen({ account, now, onCreateCharacter, onUnlockSlot, o
                     </Button>
                   )}
                 </div>
-                <div className="progress-block">
-                  <div className="progress-label">
-                    <span>XP</span>
-                    <span>
-                      {character.xp} / {xpForNextLevel(character.level)}
-                    </span>
-                  </div>
-                  <div className="progress-track">
-                    <div className="progress-fill" style={{ width: `${Math.min(100, (character.xp / xpForNextLevel(character.level)) * 100)}%` }} />
-                  </div>
-                </div>
                 {character.activity && (
                   <div className="activity-timer">
-                    <span>{getActivity(character.activity.activityId).name}</span>
+                    <span>
+                      {getActivity(character.activity.activityId).name} · {character.activity.resolvedTicks} ticks
+                    </span>
                     <strong>{formatRemainingTime(character.activity.endsAt, now)}</strong>
                   </div>
                 )}
@@ -107,6 +102,33 @@ export function AccountScreen({ account, now, onCreateCharacter, onUnlockSlot, o
             ))}
           </div>
         ) : null}
+      </section>
+
+      <section className="section">
+        <h2>Regions</h2>
+        <div className="stack">
+          {Object.entries(account.regionProgress).length === 0 ? (
+            <EmptyState title="No region progress" body="Assign a character to Explore Old Road to begin uncovering the first region." />
+          ) : (
+            Object.entries(account.regionProgress).map(([activityId, progress]) => {
+              const activity = getActivity(activityId as ActivityId);
+              const total = activity.discoveryTracks.reduce((sum, track) => sum + track.max, 0);
+              const current = activity.discoveryTracks.reduce((sum, track) => sum + (progress.tracks[track.id] ?? 0), 0);
+              return (
+                <Panel key={activityId} className="progress-card">
+                  <div className="progress-label">
+                    <strong>{activity.regionName}</strong>
+                    <span>{current} / {total}</span>
+                  </div>
+                  <div className="progress-track">
+                    <div className="progress-fill" style={{ width: `${total > 0 ? (current / total) * 100 : 0}%` }} />
+                  </div>
+                  <span className={progress.completed ? 'status idle' : 'hint'}>{progress.completed ? 'Fully explored' : 'In progress'}</span>
+                </Panel>
+              );
+            })
+          )}
+        </div>
       </section>
 
       <section className="section">

@@ -222,7 +222,7 @@ Design direction:
 
 ## Activities
 
-Activities are long-running actions selected by the player.
+Activities are the broad umbrella term for everything a character can do in the game. A character performs an activity, and the resulting progress flows back into the account.
 
 Current activity categories:
 
@@ -243,6 +243,8 @@ Design expectations:
 - Activity completion should resolve from saved timestamps when the app is reopened.
 - Activities can be gated by combat level, account skill levels, region progress, achievements, account upgrades, discovered points of interest, or collected items.
 - Activity lists should remain visible even if no character is idle or no character exists yet. Availability should disable Start actions, not hide the activity catalog.
+- Activities should be organized by modules over time. The first real module is Explore.
+- Combat level requirements are written and checked as whole levels, such as Combat Level 3. The combat level display can still show decimals for motivation.
 
 ## Exploration
 
@@ -261,7 +263,9 @@ Possible rewards:
 
 Example: A character explores for five hours and may discover special points of interest.
 
-Regions should have subcategories such as:
+Explore is a module where characters investigate whole regions. A region is its own small progression game and can have requirements, RAP cost, tick cadence, repeat rewards, discovery tracks, and completion rewards.
+
+Regions can have discovery tracks such as:
 
 - Points of interest
 - Treasure hunting
@@ -270,6 +274,34 @@ Regions should have subcategories such as:
 - Skilling opportunities
 - Region-specific drops
 - Unlockable dungeons or special activities
+- Region quests
+- Secrets
+
+These tracks do not need fully authored quests, bosses, or treasures at first. They can start as simple counters, such as `Region Quests 0 / 73`. While a character explores the region, each simulation tick can roll against those counters. A successful roll increments the counter until that track is complete.
+
+Exploration rewards should not only happen at the end of a long timer. Long waits with a single final reward are not satisfying. Instead, Explore activities should use repeat rolls during the activity:
+
+- Each Explore region defines a tick interval, such as 60 seconds.
+- Each tick can grant repeat rewards, such as skill XP.
+- Each tick can roll discovery tracks, such as Region Quests or Treasures.
+- Offline progress is resolved by calculating how many ticks elapsed while the app was closed.
+- The UI does not need to animate every hidden roll, but progress should update when ticks resolve.
+- Very rare rewards can later be converted from an intended hourly chance into a smaller per-tick chance.
+
+Discovery tracks and repeat rewards are separate:
+
+- Discovery tracks are permanent region completion counters.
+- Repeat rewards can keep a fully explored region useful, such as XP, resources, currencies, or future drops.
+
+Example region structure:
+
+- `Old Road`
+- Requirements: none
+- RAP cost: 5,000 per hour baseline, scaled down in the prototype for fast testing
+- Tick interval: 60 seconds
+- Discovery tracks: Region Quests, Treasures, Points of Interest, World Bosses, Secrets
+- Repeat rewards: Perception XP, Agility XP, Constitution XP
+- Completion reward: achievement or unlock flag when all tracks are complete
 
 Example early flow:
 
@@ -530,9 +562,10 @@ Design direction:
 - Every character on the account shares the same combat level.
 - Combat level is calculated from account combat skills.
 - Combat level should be displayed with two decimal places.
-- The formula should follow the official RuneScape-style combat level calculation as closely as possible.
+- The current MVP formula is RuneScape-style and adapted for early visible progress: defence, Constitution with a baseline of 10, Prayer, Summoning, and the strongest combat style contribute to the displayed value.
 - Perception is a real combat skill and should be integrated into the combat level calculation like the other combat skills.
 - Combat level can be used as a hard requirement for future bosses, quests, dungeons, or activities.
+- Combat level requirements use whole levels. For example, a requirement of Combat Level 3 checks the floored combat level even if the display shows 3.42.
 - Combat level is an important indicator for passive combat, but individual combat skills may also matter later.
 
 Combat skills for this project:
@@ -550,9 +583,11 @@ Combat skills for this project:
 
 Design example: an enemy weak to magic may be easier for an account whose combat profile is heavily supported by Magic, even if the overall combat level is similar to another account.
 
-Open question:
+Current formula decision:
 
-- What exact formula adaptation should be used to integrate Perception into the official RuneScape-style combat level formula?
+- Perception is treated as a full combat style for the strongest-style portion of the combat level calculation.
+- Requirements use `Math.floor(combatLevel)`.
+- The formula may be tuned later after real combat content exists, but the current MVP implementation is good enough for visible early progress and hard-gate checks.
 
 ## Items And Inventory
 
@@ -742,11 +777,18 @@ Current MVP status:
 - Top bar and bottom navigation remain visible while the middle body scrolls.
 - Top bar and bottom navigation can be collapsed or expanded separately.
 - Top bar and bottom navigation use matching arrow rows for collapse and expand.
-- Activity assignment supports Explore First Region, Train Endurance, and Fight Training Dummy.
-- Activity category tabs filter visible activities.
+- The old placeholder activities Explore First Region, Train Endurance, and Fight Training Dummy have been replaced by the Explore module.
+- Activity assignment now uses Explore as the first real module.
+- Explore currently contains the first region, Old Road.
+- Old Road runs for 5 minutes in the prototype, costs 400 RAP, and resolves every 10 seconds.
+- Old Road has discovery tracks for Region Quests, Treasures, Points of Interest, World Bosses, and Secrets.
+- Old Road repeat rewards grant Perception, Agility, and Constitution XP per tick.
+- Skills screen shows account-wide skills, total level, combat level, XP progress, and locked skills.
+- Combat level requirements use the floored combat level, while display keeps two decimal places.
 - Activity tabs and activity rows remain visible when all characters are busy; Start buttons are disabled in that state.
 - Activities cost RAP, assign the character, and resolve from timestamps when complete.
 - Progress screen includes a manual JSON save export/import backup panel.
+- Progress screen shows region discovery progress and activity logs.
 - Inventory, items, dungeons, bossing, and achievements are not implemented yet.
 
 Later:
@@ -814,13 +856,13 @@ Later:
 
 ## Open Questions
 
-- What are the first three prototype activities?
-- What are the first skill-training activities?
+- What should the next Explore region be after Old Road?
+- What should the first non-Explore module be: Combat, Skilling, Dungeon, or Deeds?
 - What are the exact names and effects of the first race passives?
 - What are the exact names and effects of the first class passives?
 - What should unlock Orc Paladin and Undead Paladin?
 - What are the first region, skill, or combat-level unlocks?
-- What is the exact Perception-aware combat level formula?
+- How should combat level be tuned once enemies and combat rewards exist?
 - What should death or failure do in passive combat?
 - Should progression be mostly linear, region-based, skill-gated, achievement-gated, or mixed?
 - How punishing should rare drops be?
