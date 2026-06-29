@@ -243,6 +243,7 @@ Confirmed current state:
 - Mobile shell decision added on 2026-06-29: the top bar and bottom navigation should remain visible while only the body content scrolls. Top bar and bottom navigation can be collapsed and expanded separately to give the body more space.
 - Mobile shell update added on 2026-06-29: top bar and bottom navigation collapse/expand through matching thin arrow rows. The top arrow row sits below the top bar; the bottom arrow row sits above the bottom nav.
 - RAP prototype button decision added on 2026-06-29: the large Account-screen `+10,000 RAP` button is removed. The player gains 10,000 RAP by pressing the plus button in the top bar.
+- Activity screen UX decision added on 2026-06-29: the activity catalog must remain visible even when there is no idle character or no character exists yet. In those states, start buttons are disabled instead of hiding the content.
 
 Required documentation workflow:
 
@@ -483,6 +484,32 @@ Files involved:
 - `src/App.tsx`
 - `src/screens/AccountScreen.tsx`
 - `src/styles.css`
+- `project_memory.md`
+- `game_design.md`
+
+### Always-Visible Activity Catalog
+
+Problem: The Activity screen returned an empty-state-only view when every character was busy, hiding the actual activities. The user wanted to inspect activities even when no character is currently available to start one.
+
+Successful solution: Removed the early return for "no idle character" from `ActivitiesScreen`. The screen now always renders the activity tabs and filtered activity list. When no character exists, activity buttons are disabled and labelled `Locked`. When all characters are busy, activity buttons are disabled and labelled `Busy`. Requirement text explains the blocking state.
+
+Commands used:
+
+```powershell
+npm run build
+```
+
+Local browser smoke test covered:
+
+- Activities are visible before any character exists.
+- No-character start buttons are disabled and labelled `Locked`.
+- Activities remain visible while all characters are busy.
+- Busy-state start buttons are disabled and labelled `Busy`.
+- Category tabs still switch visible activities while all characters are busy.
+
+Files involved:
+
+- `src/screens/ActivitiesScreen.tsx`
 - `project_memory.md`
 - `game_design.md`
 

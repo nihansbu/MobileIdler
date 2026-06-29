@@ -238,6 +238,7 @@ Design expectations:
 - Activities can run while the app is closed.
 - Activity completion should resolve from saved timestamps when the app is reopened.
 - Activities can be gated by character level, region progress, achievements, skills, account upgrades, discovered points of interest, or collected items.
+- Activity lists should remain visible even if no character is idle or no character exists yet. Availability should disable Start actions, not hide the activity catalog.
 
 ## Exploration
 
@@ -602,6 +603,7 @@ Current MVP status:
 - Top bar and bottom navigation use matching arrow rows for collapse and expand.
 - Activity assignment supports Explore First Region, Train Endurance, and Fight Training Dummy.
 - Activity category tabs filter visible activities.
+- Activity tabs and activity rows remain visible when all characters are busy; Start buttons are disabled in that state.
 - Activities cost RAP, assign the character, and resolve from timestamps when complete.
 - Progress screen includes a manual JSON save export/import backup panel.
 - Inventory, items, dungeons, bossing, and achievements are not implemented yet.
