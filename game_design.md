@@ -589,6 +589,7 @@ Current MVP status:
 - Character creation supports Human, Orc, Undead, Warrior, Paladin, and Mage with starter restrictions.
 - Activity assignment supports Explore First Region, Train Endurance, and Fight Training Dummy.
 - Activities cost RAP, assign the character, and resolve from timestamps when complete.
+- Progress screen includes a manual JSON save export/import backup panel.
 - Inventory, items, dungeons, bossing, and achievements are not implemented yet.
 
 Later:

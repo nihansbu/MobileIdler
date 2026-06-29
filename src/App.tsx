@@ -5,7 +5,7 @@ import { AccountScreen } from './screens/AccountScreen';
 import { ActivitiesScreen } from './screens/ActivitiesScreen';
 import { CharactersScreen } from './screens/CharactersScreen';
 import { ProgressScreen } from './screens/ProgressScreen';
-import { createDefaultAccount, loadAccount, resetAccount, saveAccount } from './game/save';
+import { createDefaultAccount, loadAccount, parseAccountBackup, resetAccount, saveAccount } from './game/save';
 import { canUnlockSecondSlot, resolveCompletedActivities } from './game/simulation';
 import { getActivity } from './game/content';
 import type { AccountSave, ActivityId, CharacterSave, ViewId } from './types';
@@ -95,6 +95,12 @@ export function App() {
     setActiveView('account');
   };
 
+  const importBackup = (rawBackup: string) => {
+    const importedAccount = resolveCompletedActivities(parseAccountBackup(rawBackup));
+    setAccount(importedAccount);
+    setActiveView('progress');
+  };
+
   return (
     <AppShell accountName={account.accountName} rap={account.rap} activeView={activeView} onNavigate={setActiveView}>
       {activeView === 'account' && (
@@ -107,7 +113,7 @@ export function App() {
       )}
       {activeView === 'characters' && <CharactersScreen account={account} onCreateCharacter={createCharacter} />}
       {activeView === 'activities' && <ActivitiesScreen account={account} onStartActivity={startActivity} />}
-      {activeView === 'progress' && <ProgressScreen account={account} onReset={hardReset} />}
+      {activeView === 'progress' && <ProgressScreen account={account} onImportBackup={importBackup} onReset={hardReset} />}
     </AppShell>
   );
 }

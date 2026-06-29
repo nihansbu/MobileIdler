@@ -1,12 +1,34 @@
+import { useState } from 'react';
 import { Button, EmptyState, Panel } from '../components/ui';
+import { serializeAccountBackup } from '../game/save';
 import type { AccountSave } from '../types';
 
 interface ProgressScreenProps {
   account: AccountSave;
+  onImportBackup: (rawBackup: string) => void;
   onReset: () => void;
 }
 
-export function ProgressScreen({ account, onReset }: ProgressScreenProps) {
+export function ProgressScreen({ account, onImportBackup, onReset }: ProgressScreenProps) {
+  const [exportText, setExportText] = useState('');
+  const [importText, setImportText] = useState('');
+  const [backupMessage, setBackupMessage] = useState('');
+
+  const prepareExport = () => {
+    setExportText(serializeAccountBackup(account));
+    setBackupMessage('Backup ready. Copy the text and store it outside the app.');
+  };
+
+  const importBackup = () => {
+    try {
+      onImportBackup(importText);
+      setImportText('');
+      setBackupMessage('Backup imported.');
+    } catch (error) {
+      setBackupMessage(error instanceof Error ? error.message : 'Backup import failed.');
+    }
+  };
+
   return (
     <>
       <h1 className="screen-title">Progress</h1>
@@ -42,6 +64,31 @@ export function ProgressScreen({ account, onReset }: ProgressScreenProps) {
             ))}
           </div>
         )}
+      </section>
+
+      <section className="section">
+        <h2>Save Backup</h2>
+        <Panel className="backup-panel">
+          <Button onClick={prepareExport}>Export Save</Button>
+          {exportText && (
+            <label className="field">
+              <span>Export</span>
+              <textarea readOnly value={exportText} onFocus={(event) => event.currentTarget.select()} />
+            </label>
+          )}
+          <label className="field">
+            <span>Import</span>
+            <textarea
+              value={importText}
+              onChange={(event) => setImportText(event.target.value)}
+              placeholder="Paste MobileIdler backup JSON"
+            />
+          </label>
+          <Button variant="ghost" onClick={importBackup} disabled={!importText.trim()}>
+            Import Backup
+          </Button>
+          {backupMessage && <span className="hint">{backupMessage}</span>}
+        </Panel>
       </section>
 
       <Button variant="danger" onClick={onReset} className="full-width">

@@ -236,6 +236,8 @@ Confirmed current state:
 - The user approved making the source repository public on 2026-06-29 so the app can be tested live.
 - Confirmed successful public Pages deployment on 2026-06-29: GitHub Actions run `28388691584`.
 - Confirmed live mobile smoke test on `https://nihansbu.github.io/MobileIdler/`: account creation, character creation, RAP grant, activity start, and account return all passed without console errors.
+- User workflow preference added on 2026-06-29: if the user sends an image without an explicit implementation prompt, only describe what is visible and do not change code.
+- User workflow preference added on 2026-06-29: do not run a full deploy cycle for a tiny isolated UI fix when it can be bundled with useful feature work.
 
 Required documentation workflow:
 
@@ -252,6 +254,7 @@ Required publish workflow:
 - Commit the tested changes to Git.
 - Push to `main` so GitHub Actions updates the GitHub Pages deployment.
 - If the Pages run fails, fix the deployment problem before calling the work complete.
+- For image-only messages, respond with an observation/description only unless the user also asks for a change.
 
 ## Known Working Commands
 
@@ -315,8 +318,8 @@ Get-Content -Raw -LiteralPath 'assets\manifests\asset-manifest.json' | ConvertFr
 
 ## Known Issues And Caveats
 
-- The final frontend stack has not been chosen yet.
 - `localStorage` is the first MVP persistence layer. This is acceptable for the prototype but should become a versioned, backup-friendly save system before large progression data accumulates.
+- Manual save export/import now exists, but it is still JSON-text based and should later become a more user-friendly file download/upload flow.
 - GitHub Pages may expose the deployed game publicly even if the repository is private. Do not put secrets or sensitive data into the client app.
 - Private GitHub Pages access control requires a suitable GitHub Enterprise Cloud organization setup.
 - Private repository work can still affect GitHub profile contribution visibility depending on account settings.
@@ -343,6 +346,44 @@ Important implementation details:
 Files involved:
 
 - `.github/workflows/deploy-pages.yml`
+- `project_memory.md`
+
+### Manual Save Backup MVP
+
+Problem: Save stability is a core project requirement, and the first MVP only stored state in `localStorage`.
+
+Successful solution: Added a manual backup panel on the Progress screen. The player can export the current account save as JSON text and import a previously exported backup. Imported saves are validated against the current schema and then resolved for completed offline activities before being stored.
+
+Important implementation details:
+
+- Backup serialization lives in `src/game/save.ts`.
+- `serializeAccountBackup` wraps the save with a `mobile-idler-save-backup` marker and export timestamp.
+- `parseAccountBackup` accepts the wrapped backup and validates core account fields before import.
+- The first UI is intentionally text-based for speed and debuggability; file download/upload can replace it later.
+
+Commands used:
+
+```powershell
+npm run build
+```
+
+Local browser smoke test covered:
+
+- Account creation.
+- Character creation.
+- Exporting a save.
+- Rejecting invalid import text.
+- Importing a valid backup.
+- Returning to the account dashboard with imported account and character state visible.
+- Ensuring the body uses `user-select: none` to reduce accidental mobile text selection.
+
+Files involved:
+
+- `src/game/save.ts`
+- `src/App.tsx`
+- `src/screens/ProgressScreen.tsx`
+- `src/styles.css`
+- `.gitignore`
 - `project_memory.md`
 
 ### Initial Project Memory Setup

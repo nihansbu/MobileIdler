@@ -35,12 +35,22 @@ body,
 
 body {
   background: var(--bg);
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
 }
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
+}
+
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 button {
@@ -340,7 +350,8 @@ button:disabled {
 }
 
 .field input,
-.field select {
+.field select,
+.field textarea {
   width: 100%;
   min-height: 48px;
   border: 1px solid var(--line-strong);
@@ -348,6 +359,12 @@ button:disabled {
   padding: 0 12px;
   color: var(--text);
   background: #0f1720;
+}
+
+.field textarea {
+  min-height: 112px;
+  padding-block: 12px;
+  resize: vertical;
 }
 
 .choice-group {
@@ -444,6 +461,11 @@ button:disabled {
 .roster-row,
 .log-row {
   align-items: start;
+}
+
+.backup-panel {
+  display: grid;
+  gap: 12px;
 }
 
 @media (max-width: 380px) {

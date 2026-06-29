@@ -1,6 +1,7 @@
 import type { AccountSave } from '../types';
 
 const STORAGE_KEY = 'mobile-idler-save-v1';
+const BACKUP_KIND = 'mobile-idler-save-backup';
 
 export const createDefaultAccount = (accountName = 'LuckyBoo'): AccountSave => ({
   schemaVersion: 1,
@@ -29,6 +30,51 @@ export const loadAccount = (): AccountSave | null => {
   } catch {
     return null;
   }
+};
+
+const isAccountSave = (value: unknown): value is AccountSave => {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const candidate = value as AccountSave;
+  return (
+    candidate.schemaVersion === 1 &&
+    typeof candidate.accountName === 'string' &&
+    typeof candidate.rap === 'number' &&
+    typeof candidate.characterSlots === 'number' &&
+    Array.isArray(candidate.characters) &&
+    typeof candidate.completedActivities === 'number' &&
+    Array.isArray(candidate.unlockedRaceClassCombos) &&
+    Array.isArray(candidate.activityLog) &&
+    typeof candidate.updatedAt === 'number'
+  );
+};
+
+export const serializeAccountBackup = (account: AccountSave) =>
+  JSON.stringify(
+    {
+      kind: BACKUP_KIND,
+      exportedAt: Date.now(),
+      account,
+    },
+    null,
+    2,
+  );
+
+export const parseAccountBackup = (raw: string): AccountSave => {
+  const parsed = JSON.parse(raw) as unknown;
+  const parsedObject = parsed && typeof parsed === 'object' ? (parsed as { kind?: string; account?: unknown }) : null;
+  const candidate = parsedObject?.kind === BACKUP_KIND ? parsedObject.account : parsed;
+
+  if (!isAccountSave(candidate)) {
+    throw new Error('Backup is not a valid MobileIdler save.');
+  }
+
+  return {
+    ...candidate,
+    updatedAt: Date.now(),
+  };
 };
 
 export const saveAccount = (account: AccountSave) => {
