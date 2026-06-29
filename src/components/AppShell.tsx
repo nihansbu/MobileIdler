@@ -6,6 +6,7 @@ interface AppShellProps {
   accountName: string;
   rap: number;
   activeView: ViewId;
+  onAddRap: () => void;
   onNavigate: (view: ViewId) => void;
   children: ReactNode;
 }
@@ -16,46 +17,40 @@ const navItems: Array<{ id: ViewId; label: string; icon: keyof typeof Icons }> =
   { id: 'progress', label: 'Progress', icon: 'bars' },
 ];
 
-export function AppShell({ accountName, rap, activeView, onNavigate, children }: AppShellProps) {
+export function AppShell({ accountName, rap, activeView, onAddRap, onNavigate, children }: AppShellProps) {
   const [isTopCollapsed, setIsTopCollapsed] = useState(false);
   const [isNavCollapsed, setIsNavCollapsed] = useState(false);
-  const activeItem = navItems.find((item) => item.id === activeView) ?? navItems[0];
-  const ActiveIcon = Icons[activeItem.icon];
 
   return (
     <div className="app-shell">
-      <header className={isTopCollapsed ? 'top-bar collapsed' : 'top-bar'}>
-        {isTopCollapsed ? (
-          <>
-            <div className="top-compact">
-              <span>{accountName}</span>
-              <strong>RAP {rap.toLocaleString()}</strong>
-            </div>
-            <button className="icon-button" type="button" aria-label="Expand top bar" onClick={() => setIsTopCollapsed(false)}>
-              <Icons.chevronDown size={22} />
-            </button>
-          </>
-        ) : (
-          <>
+      <header className={isTopCollapsed ? 'top-shell collapsed' : 'top-shell'}>
+        {!isTopCollapsed && (
+          <div className="top-bar">
             <div className="account-name">{accountName}</div>
             <div className="rap-cluster">
               <span>RAP</span>
               <strong>{rap.toLocaleString()}</strong>
-              <button className="icon-button" type="button" aria-label="Collapse top bar" onClick={() => setIsTopCollapsed(true)}>
-                <Icons.chevronUp size={22} />
+              <button className="icon-button" type="button" aria-label="Add 10,000 RAP" onClick={onAddRap}>
+                <Icons.plus size={22} />
               </button>
             </div>
-          </>
+          </div>
         )}
+        <button
+          className="top-collapse-button"
+          type="button"
+          aria-label={isTopCollapsed ? 'Expand top bar' : 'Collapse top bar'}
+          onClick={() => setIsTopCollapsed((collapsed) => !collapsed)}
+        >
+          {isTopCollapsed ? <Icons.chevronDown size={18} /> : <Icons.chevronUp size={18} />}
+        </button>
       </header>
 
       <main className="screen">{children}</main>
 
       <footer className={isNavCollapsed ? 'bottom-shell collapsed' : 'bottom-shell'}>
         {isNavCollapsed ? (
-          <button className="bottom-nav-collapsed" type="button" aria-label="Expand bottom navigation" onClick={() => setIsNavCollapsed(false)}>
-            <ActiveIcon size={20} />
-            <span>{activeItem.label}</span>
+          <button className="nav-collapse-button collapsed" type="button" aria-label="Expand bottom navigation" onClick={() => setIsNavCollapsed(false)}>
             <Icons.chevronUp size={20} />
           </button>
         ) : (

@@ -104,12 +104,17 @@ export function App() {
   };
 
   return (
-    <AppShell accountName={account.accountName} rap={account.rap} activeView={activeView} onNavigate={setActiveView}>
+    <AppShell
+      accountName={account.accountName}
+      rap={account.rap}
+      activeView={activeView}
+      onAddRap={() => updateAccount((current) => ({ ...current, rap: current.rap + 10000 }))}
+      onNavigate={setActiveView}
+    >
       {activeView === 'account' && (
         <AccountScreen
           account={account}
           now={now}
-          onAddRap={() => updateAccount((current) => ({ ...current, rap: current.rap + 10000 }))}
           onCreateCharacter={createCharacter}
           onUnlockSlot={unlockSlot}
           onAssignActivity={() => setActiveView('activities')}

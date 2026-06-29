@@ -78,7 +78,7 @@ RAP is the primary fuel for in-game progression.
 
 Initial simple version:
 
-- The player can press a button to gain `10,000 RAP`.
+- The player can press the plus button in the top bar to gain `10,000 RAP`.
 - This represents a fixed real-life activity value for early prototyping.
 
 Planned direction:
@@ -477,6 +477,8 @@ Design priorities:
 - Use reusable app-shell components such as bottom navigation, headers, cards, rows, segmented controls, and action buttons.
 - Top bar and bottom navigation should stay visible while the body content scrolls.
 - Top bar and bottom navigation should be separately collapsible to free more body space on mobile.
+- Top bar and bottom navigation collapse/expand should use matching thin arrow rows.
+- The top bar plus button is the current prototype RAP gain action.
 - Character creation can become visually richer later, but should start as a simple data-driven wizard.
 - Race selection should initially use clear labels, descriptions, passives, and allowed classes; race-specific backgrounds can come later.
 - Class selection should show available classes for the selected race, locked classes, class passives, and unlock requirements where applicable.
@@ -588,7 +590,7 @@ Current MVP status:
 - Uses a minimal dark Type-C-style alpha UI.
 - Account creation is local only.
 - `LuckyBoo` is the default account name.
-- RAP can be gained with the prototype `+10,000 RAP` button.
+- RAP can be gained with the prototype plus button in the top bar.
 - One character slot exists at start.
 - The next character slot can be unlocked for 2,000 RAP in the MVP.
 - Buying a new character slot does not auto-open character creation.
@@ -597,6 +599,7 @@ Current MVP status:
 - Character cards show XP progress and active activity timers.
 - Top bar and bottom navigation remain visible while the middle body scrolls.
 - Top bar and bottom navigation can be collapsed or expanded separately.
+- Top bar and bottom navigation use matching arrow rows for collapse and expand.
 - Activity assignment supports Explore First Region, Train Endurance, and Fight Training Dummy.
 - Activity category tabs filter visible activities.
 - Activities cost RAP, assign the character, and resolve from timestamps when complete.

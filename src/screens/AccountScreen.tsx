@@ -9,7 +9,6 @@ import type { AccountSave, CharacterSave } from '../types';
 interface AccountScreenProps {
   account: AccountSave;
   now: number;
-  onAddRap: () => void;
   onCreateCharacter: (character: CharacterSave) => void;
   onUnlockSlot: () => void;
   onAssignActivity: () => void;
@@ -22,7 +21,7 @@ const formatRemainingTime = (endsAt: number, now: number) => {
   return `${minutes}m ${seconds.toString().padStart(2, '0')}s`;
 };
 
-export function AccountScreen({ account, now, onAddRap, onCreateCharacter, onUnlockSlot, onAssignActivity }: AccountScreenProps) {
+export function AccountScreen({ account, now, onCreateCharacter, onUnlockSlot, onAssignActivity }: AccountScreenProps) {
   const [isCreatingCharacter, setIsCreatingCharacter] = useState(false);
   const idleCharacters = account.characters.filter((character) => !character.activity);
   const hasFreeSlot = account.characters.length < account.characterSlots;
@@ -40,10 +39,6 @@ export function AccountScreen({ account, now, onAddRap, onCreateCharacter, onUnl
         <Stat label="Slots" value={`${account.characters.length} / ${account.characterSlots}`} />
         <Stat label="Done" value={account.completedActivities} />
       </Panel>
-
-      <Button onClick={onAddRap} className="full-width">
-        +10,000 RAP
-      </Button>
 
       <section className="section">
         <div className="section-head">

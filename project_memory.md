@@ -241,6 +241,8 @@ Confirmed current state:
 - Account UI decision added on 2026-06-29: character management belongs inside the Account screen, not as a primary bottom-nav item.
 - Character slot UX decision added on 2026-06-29: buying/unlocking a character slot must not automatically prompt character creation. It should only make capacity available; the player creates a character later by pressing a Create button.
 - Mobile shell decision added on 2026-06-29: the top bar and bottom navigation should remain visible while only the body content scrolls. Top bar and bottom navigation can be collapsed and expanded separately to give the body more space.
+- Mobile shell update added on 2026-06-29: top bar and bottom navigation collapse/expand through matching thin arrow rows. The top arrow row sits below the top bar; the bottom arrow row sits above the bottom nav.
+- RAP prototype button decision added on 2026-06-29: the large Account-screen `+10,000 RAP` button is removed. The player gains 10,000 RAP by pressing the plus button in the top bar.
 
 Required documentation workflow:
 
@@ -440,16 +442,18 @@ Files involved:
 
 Problem: The top bar and bottom navigation scrolled away with the page body, which made the mobile app feel less like a persistent game UI. The user wanted both bars to stay visible and to be separately collapsible so the body can gain more usable space.
 
-Successful solution: Updated `AppShell` and layout CSS so the app uses a fixed-height `100dvh` shell with `overflow: hidden`, while `.screen` is the only scroll container. Added independent React state for top bar collapse and bottom navigation collapse. Each collapsed bar leaves a compact visible toggle so it can be expanded again.
+Successful solution: Updated `AppShell` and layout CSS so the app uses a fixed-height `100dvh` shell with `overflow: hidden`, while `.screen` is the only scroll container. Added independent React state for top bar collapse and bottom navigation collapse. Both bars use matching thin arrow rows for collapse/expand: the top row sits below the top bar, and the bottom row sits above the bottom nav. Each collapsed bar leaves its arrow row visible so it can be expanded again.
 
 Important implementation details:
 
 - `src/components/AppShell.tsx` owns `isTopCollapsed` and `isNavCollapsed`.
-- Expanded top bar shows account name, RAP, and a collapse button.
-- Collapsed top bar shows compact account/RAP text and an expand button.
+- Expanded top bar shows account name, RAP, and a plus button.
+- Pressing the top bar plus button grants 10,000 RAP in the current prototype.
+- Top bar collapse/expand uses `top-collapse-button`, not an icon inside the top bar.
 - Expanded bottom shell shows a small collapse strip plus the primary nav.
-- Collapsed bottom shell shows the current active view and an expand button.
+- Collapsed top and bottom shells keep only their arrow rows visible.
 - `src/styles.css` sets `.app-shell` to `height: 100dvh` and `.screen` to `overflow: auto`.
+- The Account screen no longer contains the large `+10,000 RAP` button.
 
 Commands used:
 
@@ -469,11 +473,15 @@ Local browser smoke test covered:
 - Top bar collapses and expands.
 - Bottom navigation collapses and expands separately.
 - Bottom navigation still contains Account, Activities, and Progress after expanding.
+- Top bar plus adds 10,000 RAP.
+- Account screen no longer contains the old large RAP button.
 
 Files involved:
 
 - `src/components/AppShell.tsx`
 - `src/components/icons.tsx`
+- `src/App.tsx`
+- `src/screens/AccountScreen.tsx`
 - `src/styles.css`
 - `project_memory.md`
 - `game_design.md`
