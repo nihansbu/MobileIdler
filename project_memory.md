@@ -231,6 +231,7 @@ Confirmed current state:
 - Deployment target: GitHub Pages via `.github/workflows/deploy-pages.yml`.
 - The Pages workflow builds with `npm ci` and `npm run build`, uploads `dist`, and deploys from GitHub Actions.
 - On 2026-06-29, GitHub rejected Pages enablement for the private repository on the current account plan: `Your current plan does not support GitHub Pages for this repository.`
+- The GitHub Actions build step itself succeeds on GitHub. The deploy pipeline fails at `actions/configure-pages` because Pages cannot be enabled for this private repo in the current setup.
 - Do not make the source repository public without explicit user approval.
 - Practical fallback if the current plan remains unchanged: keep `nihansbu/MobileIdler` private and deploy only built `dist` files to a separate public GitHub Pages repository, after user approval.
 
@@ -501,6 +502,7 @@ Observed result:
 
 - `gh api` returned `Your current plan does not support GitHub Pages for this repository.`
 - The first Pages workflow failed at `actions/configure-pages` because the repository had no enabled Pages site.
+- After updating the workflow to `actions/configure-pages@v6` with `enablement: true`, run `28388037409` still failed at Pages creation with `Resource not accessible by integration`. The GitHub Actions `npm ci` and `npm run build` steps succeeded before the Pages enablement failure.
 
 Do not repeat this exact approach unless the GitHub plan changes. Safer fallback: keep the source repository private and deploy `dist` to a separate public Pages repository after user approval.
 
