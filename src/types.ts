@@ -136,11 +136,13 @@ export interface ActivityLogEntry {
 }
 
 export interface AccountSave {
-  schemaVersion: 2;
+  schemaVersion: 3;
   accountName: string;
   rap: number;
   characterSlots: number;
   characters: CharacterSave[];
+  activeCharacterId: string | null;
+  rosterSlots: Array<string | null>;
   completedActivities: number;
   unlockedRaceClassCombos: string[];
   skillXp: Record<SkillId, number>;

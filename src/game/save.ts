@@ -1,4 +1,5 @@
 import { skills } from '../data/skills';
+import { MAX_CHARACTER_SLOTS, normalizeRosterSlots } from './roster';
 import type { AccountSave, CharacterSave, SkillId } from '../types';
 
 const STORAGE_KEY = 'mobile-idler-save-v1';
@@ -9,9 +10,16 @@ type LegacyCharacterSave = CharacterSave & {
   xp?: number;
 };
 
-type LegacyAccountSave = Omit<AccountSave, 'schemaVersion' | 'skillXp' | 'unlockedSkillIds' | 'regionProgress' | 'characters'> & {
+type LegacyAccountSave = Omit<
+  AccountSave,
+  'schemaVersion' | 'skillXp' | 'unlockedSkillIds' | 'regionProgress' | 'characters' | 'activeCharacterId' | 'rosterSlots'
+> & {
   schemaVersion: 1;
   characters: LegacyCharacterSave[];
+};
+
+type LegacyV2AccountSave = Omit<AccountSave, 'schemaVersion' | 'activeCharacterId' | 'rosterSlots'> & {
+  schemaVersion: 2;
 };
 
 export const createInitialSkillXp = (): Record<SkillId, number> =>
@@ -45,36 +53,59 @@ const normalizeCharacter = (character: LegacyCharacterSave): CharacterSave => ({
     : null,
 });
 
-const normalizeAccount = (account: AccountSave): AccountSave => ({
-  ...account,
-  characters: account.characters.map(normalizeCharacter),
-  skillXp: normalizeSkillXp(account.skillXp),
-  unlockedSkillIds: (account.unlockedSkillIds ?? []).filter((skillId) => skills.some((skill) => skill.id === skillId)),
-  regionProgress: account.regionProgress ?? {},
-  updatedAt: Date.now(),
-});
+const normalizeAccount = (account: AccountSave): AccountSave => {
+  const characters = account.characters.map(normalizeCharacter);
+  const characterSlots = Math.min(MAX_CHARACTER_SLOTS, Math.max(1, account.characterSlots, characters.length));
+  const rosterSlots = normalizeRosterSlots(characters, account.rosterSlots, characterSlots);
+  const activeCharacterId = characters.some((character) => character.id === account.activeCharacterId)
+    ? account.activeCharacterId
+    : rosterSlots.find(Boolean) ?? null;
 
-const migrateV1ToV2 = (account: LegacyAccountSave): AccountSave => ({
-  schemaVersion: 2,
-  accountName: account.accountName,
-  rap: account.rap,
-  characterSlots: account.characterSlots,
-  characters: account.characters.map(normalizeCharacter),
-  completedActivities: account.completedActivities,
-  unlockedRaceClassCombos: account.unlockedRaceClassCombos,
-  skillXp: createInitialSkillXp(),
-  unlockedSkillIds: [],
-  regionProgress: {},
-  activityLog: account.activityLog,
-  updatedAt: Date.now(),
-});
+  return {
+    ...account,
+    characterSlots,
+    characters,
+    activeCharacterId,
+    rosterSlots,
+    skillXp: normalizeSkillXp(account.skillXp),
+    unlockedSkillIds: (account.unlockedSkillIds ?? []).filter((skillId) => skills.some((skill) => skill.id === skillId)),
+    regionProgress: account.regionProgress ?? {},
+    updatedAt: Date.now(),
+  };
+};
+
+const migrateV2ToV3 = (account: LegacyV2AccountSave): AccountSave =>
+  normalizeAccount({
+    ...account,
+    schemaVersion: 3,
+    activeCharacterId: account.characters[0]?.id ?? null,
+    rosterSlots: normalizeRosterSlots(account.characters, account.characters.map((character) => character.id), account.characterSlots),
+  });
+
+const migrateV1ToV3 = (account: LegacyAccountSave): AccountSave =>
+  migrateV2ToV3({
+    schemaVersion: 2,
+    accountName: account.accountName,
+    rap: account.rap,
+    characterSlots: account.characterSlots,
+    characters: account.characters.map(normalizeCharacter),
+    completedActivities: account.completedActivities,
+    unlockedRaceClassCombos: account.unlockedRaceClassCombos,
+    skillXp: createInitialSkillXp(),
+    unlockedSkillIds: [],
+    regionProgress: {},
+    activityLog: account.activityLog,
+    updatedAt: Date.now(),
+  });
 
 export const createDefaultAccount = (accountName = 'LuckyBoo'): AccountSave => ({
-  schemaVersion: 2,
+  schemaVersion: 3,
   accountName,
   rap: 0,
   characterSlots: 1,
   characters: [],
+  activeCharacterId: null,
+  rosterSlots: Array.from({ length: MAX_CHARACTER_SLOTS }, () => null),
   completedActivities: 0,
   unlockedRaceClassCombos: [],
   skillXp: createInitialSkillXp(),
@@ -110,6 +141,32 @@ const isAccountSave = (value: unknown): value is AccountSave => {
 
   const candidate = value as AccountSave;
   return (
+    candidate.schemaVersion === 3 &&
+    typeof candidate.accountName === 'string' &&
+    typeof candidate.rap === 'number' &&
+    typeof candidate.characterSlots === 'number' &&
+    Array.isArray(candidate.characters) &&
+    (typeof candidate.activeCharacterId === 'string' || candidate.activeCharacterId === null) &&
+    Array.isArray(candidate.rosterSlots) &&
+    typeof candidate.completedActivities === 'number' &&
+    Array.isArray(candidate.unlockedRaceClassCombos) &&
+    candidate.skillXp !== null &&
+    typeof candidate.skillXp === 'object' &&
+    Array.isArray(candidate.unlockedSkillIds) &&
+    candidate.regionProgress !== null &&
+    typeof candidate.regionProgress === 'object' &&
+    Array.isArray(candidate.activityLog) &&
+    typeof candidate.updatedAt === 'number'
+  );
+};
+
+const isV2AccountSave = (value: unknown): value is LegacyV2AccountSave => {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const candidate = value as LegacyV2AccountSave;
+  return (
     candidate.schemaVersion === 2 &&
     typeof candidate.accountName === 'string' &&
     typeof candidate.rap === 'number' &&
@@ -133,7 +190,11 @@ const parseUnknownSave = (value: unknown): AccountSave | null => {
   }
 
   if (isLegacyAccountSave(value)) {
-    return migrateV1ToV2(value);
+    return migrateV1ToV3(value);
+  }
+
+  if (isV2AccountSave(value)) {
+    return migrateV2ToV3(value);
   }
 
   return null;

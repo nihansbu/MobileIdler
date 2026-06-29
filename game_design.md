@@ -70,6 +70,26 @@ Character management lives inside the Account dashboard for the current MVP:
 
 Buying a character slot should not automatically force or open character creation. It only increases available capacity. The player may create a new character later by pressing a Create button.
 
+Roster design direction:
+
+- The account has up to seven character slots.
+- Only unlocked slots are shown.
+- Slot order matters and represents priority from left to right.
+- The current implementation uses Move Mode instead of free drag-and-drop for better mobile control.
+- In Move Mode, the player taps a filled source slot and then taps a filled or empty target slot.
+- Moving onto a filled slot swaps the two slots.
+- Moving onto an empty unlocked slot places the character there and leaves the old slot empty.
+- Empty slots are not draggable.
+- Empty unlocked slots can be clicked to create or assign a character.
+
+Active character direction:
+
+- The app has one currently active character used as the default worker for starting activities.
+- After an activity starts, the active character should move to the next idle character in roster priority order if available.
+- If a higher-priority character finishes an activity later, the app should not automatically switch focus back.
+- The top bar should indicate when a higher-priority idle character is available and allow manual switching.
+- The top bar includes left/right character arrows. The left arrow moves toward higher-priority idle characters and highlights when available. The right arrow moves toward lower-priority idle characters.
+
 Design decision: the player plays the account, not one isolated character session.
 
 ## Real Life Activity Points
@@ -669,6 +689,9 @@ Design priorities:
 - Top bar and bottom navigation should be separately collapsible to free more body space on mobile.
 - Top bar and bottom navigation collapse/expand should use matching thin arrow rows.
 - The top bar plus button is the current prototype RAP gain action.
+- The expanded top bar should include compact active-character information: character icon, name, race, class, and shared combat level.
+- The expanded top bar should include quick character navigation arrows. The left arrow points toward higher-priority idle characters and should highlight when one is available. The right arrow points toward lower-priority idle characters. Disabled arrows should be greyed out.
+- The Activity screen should use the top-bar active character instead of showing its own repeated character overview block.
 - Character creation can become visually richer later, but should start as a simple data-driven wizard.
 - Race selection should initially use clear labels, descriptions, passives, and allowed classes; race-specific backgrounds can come later.
 - Class selection should show available classes for the selected race, locked classes, class passives, and unlock requirements where applicable.
@@ -786,8 +809,12 @@ Current MVP status:
 - Buying a new character slot does not auto-open character creation.
 - Character creation supports Human, Orc, Undead, Warrior, Paladin, and Mage with starter restrictions.
 - Character creation is launched from the Account screen rather than a separate Characters nav item.
-- Character cards show XP progress and active activity timers.
-- Existing MVP character XP/level display is temporary legacy behavior and should be replaced by account-wide combat level and skills.
+- Account now shows a prioritized roster instead of a simple character list.
+- The roster supports up to seven slots, shows only unlocked slots, and currently uses Move Mode for mobile-friendly slot movement.
+- The expanded top bar shows the active character, race, class, and shared combat level.
+- Activities now use the active character from the top bar rather than an Activity-screen character selector.
+- Starting an activity automatically advances the active character to the next idle roster character when possible.
+- Roster slots show status, race/class, account combat level, and active activity timers.
 - Top bar and bottom navigation remain visible while the middle body scrolls.
 - Top bar and bottom navigation can be collapsed or expanded separately.
 - Top bar and bottom navigation use matching arrow rows for collapse and expand.

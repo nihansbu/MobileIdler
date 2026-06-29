@@ -76,6 +76,10 @@ Future save system may move to IndexedDB once save size or structured backup nee
 - Each individual character can only run one active activity at a time.
 - Account-wide state includes RAP, skills, combat level, achievements, inventory, unlock flags, collections, and long-term progression.
 - Character-bound state currently includes race, class, passives, and each character's current activity. Characters act as assignable workers that feed progress back into the account.
+- The account should track an explicit roster order for characters. The roster has up to seven slots, unlocked over time. Slot order is meaningful: lower slot numbers have higher priority.
+- Empty unlocked roster slots are visible and can receive an existing character via drag/drop or create a new character, but empty slots are not themselves draggable.
+- The currently active character is the default worker used when starting a character activity. After starting an activity, the UI should auto-select the next idle character in roster order if one exists.
+- If a higher-priority character becomes idle later, the app should not automatically steal focus back. Instead, the top bar should indicate that a higher-priority idle character is available and let the player switch manually.
 - Character creation must be data-driven: races, classes, passives, allowed race/class combinations, locked combinations, and unlock requirements should live in content definitions rather than hard-coded UI branches.
 - Race/class combinations can be locked initially and unlocked later through meta-progression.
 
@@ -125,6 +129,10 @@ Current account-flow direction:
 - Characters are managed inside the account as assignable workers.
 - The player should be able to assign any available character to an activity from inside the account dashboard without fully leaving the game and re-entering via character select.
 - Character select/character detail still exists, but it is a management view, not the only way to play.
+- The Activity screen should no longer own a repeated character overview once the roster/active-worker model is implemented. It should use the globally active character from the app shell/top bar.
+- The expanded top bar should expose a compact active-character controller: character icon, name, race, class, shared combat level, and previous/next roster navigation arrows.
+- Top bar character navigation arrows follow roster priority: the left arrow switches to a higher-priority idle character and should visually highlight when one is available; the right arrow switches to a lower-priority idle character when available. Disabled arrows are greyed out.
+- Implementation decision added on 2026-06-29: use a tap-based Move Mode for roster reordering instead of free mobile drag-and-drop. In Move Mode, the player taps a filled source slot, then a filled or empty target slot. Empty slots cannot be selected as a source.
 
 Implementation implication: route/state design should be account-first. Character IDs should be referenced by activities; UI screens should not assume there is one globally selected active character.
 
@@ -748,6 +756,64 @@ Files involved:
 - `src/game/save.ts`
 - `src/game/skills.ts`
 - `src/screens/SkillsScreen.tsx`
+- `src/styles.css`
+- `project_memory.md`
+- `game_design.md`
+
+### Active Character Top Bar And Account Roster
+
+Problem: The Activity screen repeated character-selection UI and the account lacked a clear prioritized roster. The user wanted the currently active character to be globally visible in the top bar, activities to use that active character, and character ordering to become a real gameplay priority system.
+
+Successful solution: Implemented save schema v3 with persistent `activeCharacterId` and fixed seven-position `rosterSlots`. The Account screen now displays unlocked slots as a centered roster. Filled slots can be moved through a mobile-friendly Move Mode: tap `Move`, tap a filled source slot, then tap a filled or empty target slot. Empty slots can receive characters or start character creation, but cannot be selected as a move source.
+
+Important implementation details:
+
+- `src/game/roster.ts` owns roster normalization, active-character lookup, higher/lower idle navigation, post-start idle selection, slot movement, and slot placement.
+- Existing schema v1 and v2 saves migrate to schema v3 through `src/game/save.ts`.
+- The top bar now shows account name, active character name, race, class, shared combat level, priority arrows, RAP, and the RAP plus button.
+- The left top-bar arrow highlights amber when a higher-priority idle character is available.
+- The right top-bar arrow switches to the next lower-priority idle character.
+- Starting an activity uses the globally active character and then auto-selects the next idle character in roster order.
+- If a higher-priority character finishes later, the app does not auto-switch focus back; the arrow indicates availability instead.
+- The Activity screen no longer renders its own character card or character select.
+- The Old Road activity-card title/description layout was tightened so the title and description no longer run together.
+
+Commands used:
+
+```powershell
+npm run build
+```
+
+```powershell
+npm run dev -- --port 5178
+```
+
+```powershell
+npx playwright install chromium
+```
+
+Local browser smoke test covered:
+
+- Schema v3 seeded account with four unlocked slots, three characters, and one empty slot.
+- Top bar initially showed active character Aetheron.
+- Activity screen rendered without `.selected-character`.
+- Starting Explore Old Road with Aetheron switched active character to Borin.
+- Higher-priority arrow stayed disabled while Aetheron was busy.
+- Lower-priority arrow switched from Borin to Mira.
+- Higher-priority arrow then became enabled and switched back to Borin.
+- Move Mode moved Mira from slot 3 to empty slot 4.
+- Schema v2 save migrated to schema v3 and rendered the legacy character in the top bar without console errors.
+
+Files involved:
+
+- `src/types.ts`
+- `src/game/save.ts`
+- `src/game/roster.ts`
+- `src/App.tsx`
+- `src/components/AppShell.tsx`
+- `src/components/icons.tsx`
+- `src/screens/AccountScreen.tsx`
+- `src/screens/ActivitiesScreen.tsx`
 - `src/styles.css`
 - `project_memory.md`
 - `game_design.md`

@@ -9,6 +9,15 @@ import { createDefaultAccount, loadAccount, parseAccountBackup, resetAccount, sa
 import { canUnlockSecondSlot, resolveCompletedActivities } from './game/simulation';
 import { getActivity } from './game/content';
 import { areRequirementsMet } from './game/requirements';
+import {
+  findHigherPriorityIdleCharacterId,
+  findLowerPriorityIdleCharacterId,
+  findNextIdleCharacterAfterStart,
+  getActiveCharacter,
+  moveRosterSlot,
+  placeCharacterInRosterSlot,
+} from './game/roster';
+import { getCombatLevel } from './game/skills';
 import type { AccountSave, ActivityId, CharacterSave, ViewId } from './types';
 
 export function App() {
@@ -43,24 +52,37 @@ export function App() {
     return <AccountSetup onCreate={(accountName) => setAccount(createDefaultAccount(accountName))} />;
   }
 
-  const createCharacter = (character: CharacterSave) => {
+  const activeCharacter = getActiveCharacter(account);
+  const higherPriorityIdleCharacterId = findHigherPriorityIdleCharacterId(account, activeCharacter?.id ?? account.activeCharacterId);
+  const lowerPriorityIdleCharacterId = findLowerPriorityIdleCharacterId(account, activeCharacter?.id ?? account.activeCharacterId);
+  const combatLevel = getCombatLevel(account);
+
+  const createCharacter = (character: CharacterSave, slotIndex?: number) => {
     updateAccount((current) => ({
-      ...current,
-      characters: [...current.characters, character],
+      ...placeCharacterInRosterSlot(
+        {
+          ...current,
+          activeCharacterId: current.activeCharacterId ?? character.id,
+          characters: [...current.characters, character],
+        },
+        character.id,
+        slotIndex,
+      ),
     }));
     setActiveView('account');
   };
 
-  const startActivity = (characterId: string, activityId: ActivityId) => {
+  const startActivity = (activityId: ActivityId) => {
     updateAccount((current) => {
       const activity = getActivity(activityId);
+      const characterId = current.activeCharacterId;
       const character = current.characters.find((candidate) => candidate.id === characterId);
-      if (!character || character.activity || current.rap < activity.rapCost || !areRequirementsMet(current, activity.requirements)) {
+      if (!characterId || !character || character.activity || current.rap < activity.rapCost || !areRequirementsMet(current, activity.requirements)) {
         return current;
       }
 
       const now = Date.now();
-      return {
+      const updatedAccount = {
         ...current,
         rap: current.rap - activity.rapCost,
         characters: current.characters.map((character) =>
@@ -77,6 +99,11 @@ export function App() {
               }
             : character,
         ),
+      };
+
+      return {
+        ...updatedAccount,
+        activeCharacterId: findNextIdleCharacterAfterStart(updatedAccount, characterId),
       };
     });
     setActiveView('account');
@@ -95,6 +122,21 @@ export function App() {
     });
   };
 
+  const selectActiveCharacter = (characterId: string | null) => {
+    if (!characterId) {
+      return;
+    }
+
+    updateAccount((current) => ({
+      ...current,
+      activeCharacterId: current.characters.some((character) => character.id === characterId) ? characterId : current.activeCharacterId,
+    }));
+  };
+
+  const moveRosterCharacter = (fromIndex: number, toIndex: number) => {
+    updateAccount((current) => moveRosterSlot(current, fromIndex, toIndex));
+  };
+
   const hardReset = () => {
     resetAccount();
     setAccount(null);
@@ -111,20 +153,29 @@ export function App() {
     <AppShell
       accountName={account.accountName}
       rap={account.rap}
+      activeCharacter={activeCharacter}
+      combatLevel={combatLevel}
+      canSelectHigherPriority={Boolean(higherPriorityIdleCharacterId)}
+      canSelectLowerPriority={Boolean(lowerPriorityIdleCharacterId)}
       activeView={activeView}
       onAddRap={() => updateAccount((current) => ({ ...current, rap: current.rap + 10000 }))}
+      onSelectHigherPriority={() => selectActiveCharacter(higherPriorityIdleCharacterId)}
+      onSelectLowerPriority={() => selectActiveCharacter(lowerPriorityIdleCharacterId)}
       onNavigate={setActiveView}
     >
       {activeView === 'account' && (
         <AccountScreen
           account={account}
           now={now}
+          activeCharacterId={activeCharacter?.id ?? null}
           onCreateCharacter={createCharacter}
           onUnlockSlot={unlockSlot}
           onAssignActivity={() => setActiveView('activities')}
+          onMoveRosterCharacter={moveRosterCharacter}
+          onSelectCharacter={selectActiveCharacter}
         />
       )}
-      {activeView === 'activities' && <ActivitiesScreen account={account} onStartActivity={startActivity} />}
+      {activeView === 'activities' && <ActivitiesScreen account={account} activeCharacter={activeCharacter} onStartActivity={startActivity} />}
       {activeView === 'skills' && <SkillsScreen account={account} />}
       {activeView === 'progress' && <ProgressScreen account={account} onImportBackup={importBackup} onReset={hardReset} />}
     </AppShell>

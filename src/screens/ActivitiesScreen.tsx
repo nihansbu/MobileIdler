@@ -1,61 +1,32 @@
-import { useState } from 'react';
 import { Icons } from '../components/icons';
 import { Button, EmptyState, Panel } from '../components/ui';
 import { activities } from '../data/activities';
-import { getClass, getRace } from '../game/content';
 import { areRequirementsMet, getRequirementsLabel } from '../game/requirements';
 import { getSkill } from '../game/skills';
-import type { AccountSave, ActivityId } from '../types';
+import type { AccountSave, ActivityId, CharacterSave } from '../types';
 
 interface ActivitiesScreenProps {
   account: AccountSave;
-  onStartActivity: (characterId: string, activityId: ActivityId) => void;
+  activeCharacter: CharacterSave | undefined;
+  onStartActivity: (activityId: ActivityId) => void;
 }
 
 const formatTrackProgress = (account: AccountSave, activityId: ActivityId, trackId: string) =>
   account.regionProgress[activityId]?.tracks[trackId] ?? 0;
 
-export function ActivitiesScreen({ account, onStartActivity }: ActivitiesScreenProps) {
-  const idleCharacters = account.characters.filter((character) => !character.activity);
-  const [characterId, setCharacterId] = useState(idleCharacters[0]?.id ?? '');
-  const selectedCharacter = idleCharacters.find((character) => character.id === characterId) ?? idleCharacters[0];
+export function ActivitiesScreen({ account, activeCharacter, onStartActivity }: ActivitiesScreenProps) {
   const hasAnyCharacter = account.characters.length > 0;
+  const canUseActiveCharacter = Boolean(activeCharacter && !activeCharacter.activity);
 
   return (
     <>
       <h1 className="screen-title">Activities</h1>
 
-      {selectedCharacter ? (
-        <Panel className="selected-character">
-          <div className="avatar">
-            <Icons.profile size={28} />
-          </div>
-          <div>
-            <strong>{selectedCharacter.name}</strong>
-            <span>
-              {getRace(selectedCharacter.raceId).name} {getClass(selectedCharacter.classId).name}
-            </span>
-          </div>
-          <span className="status idle">Idle</span>
-        </Panel>
-      ) : (
+      {!canUseActiveCharacter && (
         <EmptyState
-          title={hasAnyCharacter ? 'No idle character' : 'No character'}
-          body={hasAnyCharacter ? 'Regions remain visible while every character is busy.' : 'Create a character before starting activities.'}
+          title={hasAnyCharacter ? 'Active character busy' : 'No character'}
+          body={hasAnyCharacter ? 'Activities remain visible. Switch to an idle character in the top bar or wait.' : 'Create a character before starting activities.'}
         />
-      )}
-
-      {idleCharacters.length > 1 && (
-        <label className="field">
-          <span>Character</span>
-          <select value={selectedCharacter.id} onChange={(event) => setCharacterId(event.target.value)}>
-            {idleCharacters.map((character) => (
-              <option key={character.id} value={character.id}>
-                {character.name}
-              </option>
-            ))}
-          </select>
-        </label>
       )}
 
       <div className="segmented module-tabs">
@@ -76,16 +47,18 @@ export function ActivitiesScreen({ account, onStartActivity }: ActivitiesScreenP
           {activities.map((activity) => {
             const canAfford = account.rap >= activity.rapCost;
             const requirementsMet = areRequirementsMet(account, activity.requirements);
-            const canStart = Boolean(selectedCharacter) && canAfford && requirementsMet;
-            const statusLabel = !selectedCharacter
-              ? 'No idle character'
+            const canStart = canUseActiveCharacter && canAfford && requirementsMet;
+            const statusLabel = !canUseActiveCharacter
+              ? activeCharacter
+                ? 'Active busy'
+                : 'No character'
               : !requirementsMet
                 ? `Requires ${getRequirementsLabel(activity.requirements)}`
                 : canAfford
                   ? 'Ready'
                   : 'Need RAP';
             const statusClass = canStart ? 'met' : 'blocked';
-            const disabledLabel = hasAnyCharacter ? 'Busy' : 'Locked';
+            const disabledLabel = !hasAnyCharacter ? 'Locked' : activeCharacter?.activity ? 'Busy' : 'No worker';
             const regionProgress = account.regionProgress[activity.id];
             const totalDiscoveries = activity.discoveryTracks.reduce((sum, track) => sum + track.max, 0);
             const currentDiscoveries = activity.discoveryTracks.reduce(
@@ -99,12 +72,12 @@ export function ActivitiesScreen({ account, onStartActivity }: ActivitiesScreenP
                   <div className="activity-icon">
                     <Icons.map size={28} />
                   </div>
-                  <div>
+                  <div className="activity-card-copy">
                     <strong>{activity.regionName}</strong>
                     <span>{activity.description}</span>
                   </div>
-                  <Button disabled={!canStart} onClick={() => selectedCharacter && onStartActivity(selectedCharacter.id, activity.id)}>
-                    {selectedCharacter ? 'Explore' : disabledLabel}
+                  <Button disabled={!canStart} onClick={() => onStartActivity(activity.id)}>
+                    {canUseActiveCharacter ? 'Explore' : disabledLabel}
                   </Button>
                 </div>
 

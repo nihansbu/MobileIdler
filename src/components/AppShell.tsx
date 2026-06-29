@@ -1,12 +1,19 @@
 import { useState, type ReactNode } from 'react';
 import { Icons } from './icons';
-import type { ViewId } from '../types';
+import { getClass, getRace } from '../game/content';
+import type { CharacterSave, ViewId } from '../types';
 
 interface AppShellProps {
   accountName: string;
   rap: number;
+  activeCharacter: CharacterSave | undefined;
+  combatLevel: number;
+  canSelectHigherPriority: boolean;
+  canSelectLowerPriority: boolean;
   activeView: ViewId;
   onAddRap: () => void;
+  onSelectHigherPriority: () => void;
+  onSelectLowerPriority: () => void;
   onNavigate: (view: ViewId) => void;
   children: ReactNode;
 }
@@ -18,16 +25,68 @@ const navItems: Array<{ id: ViewId; label: string; icon: keyof typeof Icons }> =
   { id: 'progress', label: 'Progress', icon: 'bars' },
 ];
 
-export function AppShell({ accountName, rap, activeView, onAddRap, onNavigate, children }: AppShellProps) {
+export function AppShell({
+  accountName,
+  rap,
+  activeCharacter,
+  combatLevel,
+  canSelectHigherPriority,
+  canSelectLowerPriority,
+  activeView,
+  onAddRap,
+  onSelectHigherPriority,
+  onSelectLowerPriority,
+  onNavigate,
+  children,
+}: AppShellProps) {
   const [isTopCollapsed, setIsTopCollapsed] = useState(false);
   const [isNavCollapsed, setIsNavCollapsed] = useState(false);
+  const race = activeCharacter ? getRace(activeCharacter.raceId) : null;
+  const klass = activeCharacter ? getClass(activeCharacter.classId) : null;
 
   return (
     <div className="app-shell">
       <header className={isTopCollapsed ? 'top-shell collapsed' : 'top-shell'}>
         {!isTopCollapsed && (
           <div className="top-bar">
-            <div className="account-name">{accountName}</div>
+            <div className="top-identity">
+              <button
+                className={canSelectHigherPriority ? 'character-switch available' : 'character-switch'}
+                type="button"
+                aria-label="Select higher priority idle character"
+                onClick={onSelectHigherPriority}
+                disabled={!canSelectHigherPriority}
+              >
+                <Icons.chevronLeft size={18} />
+              </button>
+              <div className="top-avatar" aria-hidden="true">
+                <Icons.profile size={21} />
+              </div>
+              <button
+                className="character-switch"
+                type="button"
+                aria-label="Select lower priority idle character"
+                onClick={onSelectLowerPriority}
+                disabled={!canSelectLowerPriority}
+              >
+                <Icons.chevronRight size={18} />
+              </button>
+              <div className="top-character-copy">
+                <span className="account-name compact">{accountName}</span>
+                {activeCharacter && race && klass ? (
+                  <>
+                    <strong>{activeCharacter.name}</strong>
+                    <span>{race.name} {klass.name}</span>
+                    <span>Combat {combatLevel.toFixed(2)}</span>
+                  </>
+                ) : (
+                  <>
+                    <strong>No character</strong>
+                    <span>Create a worker</span>
+                  </>
+                )}
+              </div>
+            </div>
             <div className="rap-cluster">
               <span>RAP</span>
               <strong>{rap.toLocaleString()}</strong>
