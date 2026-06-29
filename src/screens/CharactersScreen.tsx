@@ -130,7 +130,7 @@ export function CharactersScreen({ account, onCreateCharacter }: CharactersScree
               <Panel key={character.id} className="roster-row">
                 <strong>{character.name}</strong>
                 <span>
-                  Lvl {character.level} · {getRace(character.raceId).name} {getClass(character.classId).name}
+                  Lvl {character.level} - {getRace(character.raceId).name} {getClass(character.classId).name}
                 </span>
                 <span>{character.activity ? 'Busy' : 'Idle'}</span>
               </Panel>

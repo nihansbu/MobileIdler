@@ -12,8 +12,8 @@ The project should be built for long-term expansion: many characters, items, ski
 - Audience: private personal use by the project owner.
 - Version control: GitHub.
 - Hosting preference: static web hosting if possible.
-- Privacy preference: keep the Git repository as private as practical.
-- Acceptable hosting privacy: the repository should be private; the hosted website may be reachable by anyone who has the link.
+- Privacy preference: public repository is acceptable for now so GitHub Pages works on the current account plan.
+- Hosting privacy: the hosted website is publicly reachable by link.
 - Save stability is a top priority because progression is expected to last for a very long time.
 
 ## Hosting Notes
@@ -27,7 +27,7 @@ Important verified notes from GitHub documentation:
 - GitHub warns that Pages sites are publicly available on the internet even if the repository is private, unless private Pages access control is available for the account/organization.
 - Privately published GitHub Pages sites require GitHub Enterprise Cloud organization access control.
 
-Practical current assumption: use a private GitHub repository if available, but treat the deployed GitHub Pages site as public unless a private Pages-capable plan is intentionally used.
+Current practical decision as of 2026-06-29: the repository may be public so the MVP can be tested live through GitHub Pages.
 
 GitHub profile/privacy notes verified on 2026-06-28:
 
@@ -227,13 +227,13 @@ Confirmed current state:
 - Repository exists locally at `C:\Users\nikla\Documents\MobileIdler`.
 - The repository now contains a React/Vite MVP, project documentation, and the asset pipeline.
 - GitHub repository target: `nihansbu/MobileIdler`.
-- Current GitHub repository: private `nihansbu/MobileIdler`.
+- Current GitHub repository: public `nihansbu/MobileIdler`.
+- Live GitHub Pages URL: `https://nihansbu.github.io/MobileIdler/`.
 - Deployment target: GitHub Pages via `.github/workflows/deploy-pages.yml`.
 - The Pages workflow builds with `npm ci` and `npm run build`, uploads `dist`, and deploys from GitHub Actions.
 - On 2026-06-29, GitHub rejected Pages enablement for the private repository on the current account plan: `Your current plan does not support GitHub Pages for this repository.`
 - The GitHub Actions build step itself succeeds on GitHub. The deploy pipeline fails at `actions/configure-pages` because Pages cannot be enabled for this private repo in the current setup.
-- Do not make the source repository public without explicit user approval.
-- Practical fallback if the current plan remains unchanged: keep `nihansbu/MobileIdler` private and deploy only built `dist` files to a separate public GitHub Pages repository, after user approval.
+- The user approved making the source repository public on 2026-06-29 so the app can be tested live.
 
 Required documentation workflow:
 
@@ -288,6 +288,18 @@ gh run view <run-id> --log-failed
 ```
 
 ```powershell
+gh repo edit nihansbu/MobileIdler --visibility public --accept-visibility-change-consequences
+```
+
+```powershell
+gh api --method POST repos/nihansbu/MobileIdler/pages -f build_type=workflow
+```
+
+```powershell
+gh workflow run deploy-pages.yml --ref main
+```
+
+```powershell
 Get-Content -Raw -LiteralPath 'assets\manifests\asset-manifest.example.json' | ConvertFrom-Json | Out-Null; Write-Output 'asset manifest example JSON is valid'
 ```
 
@@ -309,17 +321,16 @@ Get-Content -Raw -LiteralPath 'assets\manifests\asset-manifest.json' | ConvertFr
 
 ### GitHub Pages Deployment Pipeline
 
-Problem: The MVP needed to be available through a live link after tested implementation work, while keeping the GitHub repository as private as practical.
+Problem: The MVP needed to be available through a live link after tested implementation work.
 
-Partial solution: Added a GitHub Actions workflow at `.github/workflows/deploy-pages.yml`. The workflow runs on pushes to `main`, installs dependencies with `npm ci`, builds with `npm run build`, uploads the `dist` folder as a Pages artifact, and deploys with GitHub Pages actions. The source repository was created as private at `nihansbu/MobileIdler` and pushed to `main`.
+Successful solution: Added a GitHub Actions workflow at `.github/workflows/deploy-pages.yml`. The workflow runs on pushes to `main`, installs dependencies with `npm ci`, builds with `npm run build`, uploads the `dist` folder as a Pages artifact, and deploys with GitHub Pages actions. The source repository was changed to public with user approval because the current plan does not support Pages for the private repo.
 
 Important implementation details:
 
 - Local verification still matters before pushing. The current minimum check is `npm run build`.
-- The deployed Pages site should be treated as publicly reachable by link.
+- The deployed Pages site is publicly reachable at `https://nihansbu.github.io/MobileIdler/`.
 - Future completed prompts should be committed and pushed to `main` after testing so the live Pages version updates automatically.
-- Current blocker: GitHub Pages cannot be enabled for the private repository on the current account plan.
-- Next decision needed: either use a GitHub plan that supports Pages for private repositories, make the source repo public, or create a separate public deploy-only repository containing built static files.
+- After pushing, verify the GitHub Actions Pages run and check that the live URL returns HTTP 200.
 
 Files involved:
 

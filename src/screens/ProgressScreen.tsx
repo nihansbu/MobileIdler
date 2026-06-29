@@ -34,7 +34,7 @@ export function ProgressScreen({ account, onReset }: ProgressScreenProps) {
             {account.activityLog.map((entry) => (
               <Panel key={entry.id} className="log-row">
                 <strong>
-                  {entry.characterName} · {entry.activityName}
+                  {entry.characterName} - {entry.activityName}
                 </strong>
                 <span>{entry.result}</span>
                 <small>{new Date(entry.at).toLocaleString()}</small>

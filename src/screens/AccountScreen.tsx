@@ -40,7 +40,7 @@ export function AccountScreen({ account, onAddRap, onUnlockSlot, onAssignActivit
                 <div>
                   <strong>{character.name}</strong>
                   <span>
-                    Lvl {character.level} · {character.raceId} {character.classId}
+                    Lvl {character.level} - {character.raceId} {character.classId}
                   </span>
                   <span className={character.activity ? 'status busy' : 'status idle'}>
                     {character.activity ? 'Busy' : 'Idle'}
