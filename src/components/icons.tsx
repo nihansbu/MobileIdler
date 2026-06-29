@@ -1,0 +1,33 @@
+import {
+  Activity,
+  BarChart3,
+  CheckCircle2,
+  CircleUserRound,
+  Coins,
+  Dumbbell,
+  Lock,
+  Map,
+  Menu,
+  Plus,
+  Shield,
+  Swords,
+  UserRound,
+  UsersRound,
+} from 'lucide-react';
+
+export const Icons = {
+  activity: Activity,
+  account: UserRound,
+  bars: BarChart3,
+  check: CheckCircle2,
+  characters: UsersRound,
+  coins: Coins,
+  combat: Swords,
+  endurance: Dumbbell,
+  lock: Lock,
+  map: Map,
+  menu: Menu,
+  plus: Plus,
+  profile: CircleUserRound,
+  shield: Shield,
+};

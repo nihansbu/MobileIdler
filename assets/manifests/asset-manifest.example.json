@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "style": "clean_high_fantasy_mobile_game",
+  "assets": [
+    {
+      "id": "race_human_creation_bg",
+      "type": "background",
+      "path": "assets/generated/backgrounds/races/human_creation_bg.png",
+      "usage": "character_creation.race.human",
+      "status": "draft",
+      "promptFile": "assets/prompts/background-template.md"
+    },
+    {
+      "id": "class_warrior_icon",
+      "type": "icon",
+      "path": "assets/generated/icons/classes/warrior_icon.png",
+      "usage": "character_creation.class.warrior",
+      "status": "draft",
+      "promptFile": "assets/prompts/icon-template.md"
+    }
+  ]
+}

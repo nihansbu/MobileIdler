@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "style": "clean_high_fantasy_mobile_game",
+  "assets": [
+    {
+      "id": "mockup_character_creation_race_selection_human",
+      "type": "screen_mockup",
+      "path": "assets/generated/mockups/character_creation/race_selection_human.png",
+      "usage": "character_creation.race_selection",
+      "status": "draft",
+      "promptFile": "assets/prompts/screen-mockup-template.md"
+    },
+    {
+      "id": "mockup_character_creation_class_selection_orc_warrior",
+      "type": "screen_mockup",
+      "path": "assets/generated/mockups/character_creation/class_selection_orc_warrior.png",
+      "usage": "character_creation.class_selection",
+      "status": "draft",
+      "promptFile": "assets/prompts/screen-mockup-template.md"
+    },
+    {
+      "id": "mockup_character_creation_final_review_undead_mage",
+      "type": "screen_mockup",
+      "path": "assets/generated/mockups/character_creation/final_review_undead_mage.png",
+      "usage": "character_creation.final_review",
+      "status": "draft",
+      "promptFile": "assets/prompts/screen-mockup-template.md"
+    },
+    {
+      "id": "mockup_minimal_alpha_dark_race_wizard",
+      "type": "screen_mockup",
+      "path": "assets/generated/mockups/minimal_alpha_ui/variant_a_dark_race_wizard.png",
+      "usage": "alpha_ui.character_creation.race_wizard",
+      "status": "preferred_alpha_direction",
+      "promptFile": "assets/prompts/screen-mockup-template.md"
+    },
+    {
+      "id": "mockup_minimal_alpha_light_account_dashboard",
+      "type": "screen_mockup",
+      "path": "assets/generated/mockups/minimal_alpha_ui/variant_b_light_account_dashboard.png",
+      "usage": "alpha_ui.account_dashboard",
+      "status": "preferred_alpha_direction",
+      "promptFile": "assets/prompts/screen-mockup-template.md"
+    },
+    {
+      "id": "mockup_minimal_alpha_dark_activity_assignment",
+      "type": "screen_mockup",
+      "path": "assets/generated/mockups/minimal_alpha_ui/variant_c_dark_activity_assignment.png",
+      "usage": "alpha_ui.activity_assignment",
+      "status": "preferred_alpha_direction",
+      "promptFile": "assets/prompts/screen-mockup-template.md"
+    }
+  ]
+}
