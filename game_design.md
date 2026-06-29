@@ -36,8 +36,8 @@ The current intended gameflow is:
 5. Assign available characters to activities such as exploring, training, or fighting.
 6. Activities consume RAP and run for real time.
 7. Offline time counts.
-8. Completion grants XP, drops, unlock progress, achievements, or region progress.
-9. Character levels, skills, equipment, account bonuses, and unlocks improve future activity speed, success chance, and available content.
+8. Completion grants skill XP, drops, unlock progress, achievements, or region progress.
+9. Account skills, combat level, equipment, account bonuses, and unlocks improve future activity speed, success chance, and available content.
 10. New regions, bosses, dungeons, loot tables, skills, account upgrades, and character slots unlock through milestones.
 
 The player should rarely be asked to make fast tactical decisions. The main decisions are long-term planning decisions: what to spend RAP on, which character should do which activity, what boss or region to farm, which unlock to chase, and which collection goals matter now.
@@ -64,7 +64,7 @@ Character management lives inside the Account dashboard for the current MVP:
 
 - Create a character if a free slot exists.
 - Inspect each character in the roster.
-- See class, race, level, XP progress, current activity, and status.
+- See class, race, account combat level, relevant progress, current activity, and status.
 - Assign idle characters to activities from the roster.
 - Rename or customize characters if supported later.
 
@@ -87,6 +87,10 @@ Planned direction:
 - Example deed: walk 10,000 steps and gain 10,000 RAP.
 - Example deed: exercise for one hour and gain around 20,000 RAP.
 - Different real-life activities can reward different RAP amounts based on difficulty or value.
+- A rough economy baseline is that one in-game activity hour costs about 5,000 RAP.
+- A rough real-life earning baseline is that one hour of meaningful real-life activity earns about 20,000 RAP.
+- RAP is used both to run activities and to unlock or purchase newly available content.
+- Example: reaching a skill requirement may only unlock the option to buy an item, resource type, activity, or feature; the final unlock can still require RAP spending.
 
 Design intent: meaningful in-game progress should be tied to real-world activity, but the game itself remains an idle/tracking RPG rather than an action game.
 
@@ -98,7 +102,7 @@ Design intent: meaningful in-game progress should be tied to real-world activity
 4. RAP and requirements are checked.
 5. The character starts a timed activity.
 6. When the activity finishes, rewards are applied.
-7. Rewards may include XP, levels, items, currencies, unlocks, achievements, points of interest, or rare drops.
+7. Rewards may include skill XP, account progress, items, currencies, unlocks, achievements, points of interest, or rare drops.
 8. New activities and goals become available.
 
 Offline progress counts. If an activity finishes while the app is closed, it should resolve when the app is opened again.
@@ -111,13 +115,13 @@ Planned:
 - The account starts with one character slot.
 - Additional character slots are unlocked through milestones and RAP spending.
 - Character selection similar in concept to MMORPG character select.
-- Each character can have its own progression.
+- Each character can have its own race, class, passives, and future character-specific identity, but core skill progression flows into the account.
 - Characters can perform different activities.
 - Multiple characters can perform activities at the same time.
 - Each individual character can only have one active activity at a time.
-- Skills are character-bound by default.
+- Skills are account-wide by default.
 - Each character has a race and class.
-- Character power can come from class, race, level, skills, equipment, character bonuses, and account-wide bonuses.
+- Character power can come from class, race, account combat level, account skills, equipment, character bonuses, and account-wide bonuses.
 - Race/class combinations are restricted by default and can be expanded through account meta-progression.
 
 Open questions:
@@ -210,7 +214,7 @@ Initial prototype matrix:
 Design direction:
 
 - Locked combinations should be shown as locked goals when it helps motivation.
-- Unlock requirements can include RAP spending, character level, achievements, quests, boss kills, reputation, rare drops, or account upgrades.
+- Unlock requirements can include RAP spending, combat level, account skill levels, achievements, quests, boss kills, reputation, rare drops, or account upgrades.
 - Unlocking unusual combinations should feel like a special account milestone.
 - Example: an account later unlocks Orc Paladin by completing a special quest about rescuing or recruiting an Orc Paladin, then spending a large amount of RAP.
 - A long-term goal can be unlocking every race/class combination.
@@ -237,7 +241,7 @@ Design expectations:
 - Activities can unlock new systems, regions, dungeons, bosses, or points of interest.
 - Activities can run while the app is closed.
 - Activity completion should resolve from saved timestamps when the app is reopened.
-- Activities can be gated by character level, region progress, achievements, skills, account upgrades, discovered points of interest, or collected items.
+- Activities can be gated by combat level, account skill levels, region progress, achievements, account upgrades, discovered points of interest, or collected items.
 - Activity lists should remain visible even if no character is idle or no character exists yet. Availability should disable Start actions, not hide the activity catalog.
 
 ## Exploration
@@ -246,8 +250,8 @@ Exploration is a major progression activity.
 
 Possible rewards:
 
-- Character XP
-- Exploration XP
+- Skill XP
+- Exploration or region progress
 - Region progress
 - Items
 - Currencies
@@ -269,10 +273,10 @@ Regions should have subcategories such as:
 
 Example early flow:
 
-- A level 1 character starts in the first region.
+- A new account starts with baseline level 1 skills and the first region available.
 - Explore is the first core activity.
-- Exploration grants XP and region progress.
-- At level 5, a new region, skill, activity, or account upgrade becomes available.
+- Exploration can grant skill XP and region progress.
+- At a future skill milestone or combat level milestone, a new region, skill activity, or account upgrade can become available.
 - Region progress can reveal bosses, dungeons, treasures, or points of interest.
 
 ## Combat System
@@ -283,10 +287,10 @@ The player chooses what a character should fight. The character then fights pass
 
 Combat should consider:
 
-- Character level
+- Account combat level
 - Character class
 - Character race
-- Character skills
+- Account combat skills
 - Equipped items
 - Account-wide bonuses
 - Character-specific bonuses
@@ -363,7 +367,7 @@ The game should use layered gated progression similar in spirit to RuneScape and
 
 Possible gates:
 
-- Character level
+- Combat level
 - Skill level
 - Region progress
 - Boss kills
@@ -398,21 +402,157 @@ Design direction:
 - Unlock chains should be data-driven so new content can be added as content definitions.
 - Unlocking rare race/class combinations is part of meta-progression.
 
+## Requirements And Rewards
+
+Requirements and rewards are core systems that should sit underneath nearly every gameplay entity.
+
+Any of the following should be able to declare requirements later:
+
+- Activities
+- Items
+- Quests
+- Bosses
+- Dungeons
+- Regions
+- Skills or skill milestones
+- Account upgrades
+- Race/class combinations
+- Achievements
+- Future systems
+
+Requirements are hard gates for now. If the account does not meet the requirement, the related content cannot be started, completed, bought, equipped, or claimed.
+
+Requirement examples:
+
+- Skill level, such as Prayer 45.
+- Combat level.
+- Quest completion.
+- Item ownership.
+- Mount or collection count.
+- Achievement completion.
+- Region progress.
+- Boss kill count.
+- Dungeon completion.
+- Account unlock flag.
+- RAP cost or RAP spend requirement.
+- Race, class, or race/class condition for content that intentionally depends on the worker.
+
+Rewards should also be flexible and optional. Any activity or unlock can grant none, one, or many reward types.
+
+Reward examples:
+
+- Skill XP.
+- Items or stackable resources.
+- Drop table rolls.
+- Ultra-rare drops, such as a 1 in 500 mount.
+- Unlock flags.
+- Quest progress or completion.
+- Achievement progress or completion.
+- Region progress.
+- Account upgrades.
+- Quality-of-life unlocks.
+
+Design intent: the game should not hard-code "this is a Fishing activity" or "this is a Combat reward" into one-off UI logic. Content should describe requirements and rewards, and the shared game systems should evaluate and apply them.
+
 ## Skills
 
-Skills are a major progression system.
+Skills are a major account-wide progression system inspired by RuneScape. Characters perform actions, but the resulting skill XP belongs to the account.
 
 Planned:
 
 - Skills can be trained by spending RAP on timed activities.
 - Each skill should have its own icon eventually.
 - Skills may unlock activities, items, crafting, regions, combat options, or passive benefits.
-- Skills are character-bound by default.
+- Skill levels can act as hard requirements for any content entity.
+- Skill XP can be granted through any reward definition.
+- Activities do not need one fixed main skill. An activity can grant no skill XP, one skill XP reward, or several skill XP rewards.
+- Skills run from level 1 to 120.
+- XP continues past level 120 up to 200,000,000 XP per skill.
+- XP should follow the RuneScape XP curve, with level 99 around 13,034,431 XP and level 120 around 104,273,167 XP.
+- XP is the source of truth; visible level is derived from XP.
+- All skills should be visible from the start on a dedicated Skills screen.
+- Invention, Necromancy, and Sailing are visible but locked until account total level 800.
+- Locked skills still count toward total level.
+- Locked skills cannot receive XP before they are unlocked.
+
+Initial skill roster:
+
+- Attack
+- Strength
+- Defence
+- Constitution
+- Ranged
+- Magic
+- Prayer
+- Summoning
+- Necromancy
+- Perception
+- Mining
+- Smithing
+- Fishing
+- Cooking
+- Firemaking
+- Woodcutting
+- Crafting
+- Fletching
+- Runecrafting
+- Construction
+- Agility
+- Herblore
+- Thieving
+- Slayer
+- Farming
+- Hunter
+- Divination
+- Dungeoneering
+- Invention
+- Archaeology
+- Sailing
+
+Example future activity:
+
+- `Catch Lobster` requires Fishing 40.
+- It costs RAP based on duration, roughly 5,000 RAP per in-game hour.
+- It rewards lobsters and Fishing XP per successful catch.
+- Catch count can vary with randomness and account skill level.
 
 Open questions:
 
-- What are the first prototype skills?
-- Are skill levels capped or effectively uncapped?
+- What should the exact first skill-training activities be?
+- Should skills grant passive bonuses immediately, or should passive skill bonuses be added later after the core XP/requirement system is stable?
+
+## Combat Level
+
+Combat level is account-wide and replaces character level as the main power indicator.
+
+Design direction:
+
+- Every character on the account shares the same combat level.
+- Combat level is calculated from account combat skills.
+- Combat level should be displayed with two decimal places.
+- The formula should follow the official RuneScape-style combat level calculation as closely as possible.
+- Perception is a real combat skill and should be integrated into the combat level calculation like the other combat skills.
+- Combat level can be used as a hard requirement for future bosses, quests, dungeons, or activities.
+- Combat level is an important indicator for passive combat, but individual combat skills may also matter later.
+
+Combat skills for this project:
+
+- Attack
+- Strength
+- Defence
+- Constitution
+- Ranged
+- Magic
+- Prayer
+- Summoning
+- Necromancy
+- Perception
+
+Design example: an enemy weak to magic may be easier for an account whose combat profile is heavily supported by Magic, even if the overall combat level is similar to another account.
+
+Open question:
+
+- What exact formula adaptation should be used to integrate Perception into the official RuneScape-style combat level formula?
 
 ## Items And Inventory
 
@@ -456,7 +596,7 @@ Achievement examples:
 - Own 25 mounts.
 - Own 50 mounts.
 - Own 5 raid mounts.
-- Reach character level 5.
+- Reach combat level 5.
 - Discover all points of interest in a region.
 - Defeat a specific boss enough times.
 
@@ -598,6 +738,7 @@ Current MVP status:
 - Character creation supports Human, Orc, Undead, Warrior, Paladin, and Mage with starter restrictions.
 - Character creation is launched from the Account screen rather than a separate Characters nav item.
 - Character cards show XP progress and active activity timers.
+- Existing MVP character XP/level display is temporary legacy behavior and should be replaced by account-wide combat level and skills.
 - Top bar and bottom navigation remain visible while the middle body scrolls.
 - Top bar and bottom navigation can be collapsed or expanded separately.
 - Top bar and bottom navigation use matching arrow rows for collapse and expand.
@@ -656,13 +797,15 @@ Later:
 - RAP is account-wide.
 - Achievements are account-wide.
 - Inventory is account-wide.
-- Skills are character-bound by default.
+- Skills are account-wide by default.
+- Combat level is account-wide and replaces character level as the primary shared power indicator.
+- Perception is a combat skill for this project.
 - Combat is passive: the player chooses a target/activity, then character power determines speed, danger, and rewards.
 - Boss and dungeon loot tables should be visible in the UI.
 - Collection progress should show obtained and missing drops.
 - Ultra-rare drops, especially mounts, are important long-term goals.
 - Achievements can unlock gameplay content, including special dungeons and account-wide upgrades.
-- Progression should be gated through levels, regions, skills, achievements, item collection, boss kills, and RAP spending.
+- Progression should be gated through combat level, skill levels, regions, achievements, item collection, boss kills, and RAP spending.
 - Offline progress counts and should resolve when the app is reopened.
 - The first prototype can omit inventory.
 - Clean high-fantasy mobile game art is the current visual direction.
@@ -672,12 +815,12 @@ Later:
 ## Open Questions
 
 - What are the first three prototype activities?
-- What is the first skill list?
+- What are the first skill-training activities?
 - What are the exact names and effects of the first race passives?
 - What are the exact names and effects of the first class passives?
 - What should unlock Orc Paladin and Undead Paladin?
-- What are the first region and level 5 unlocks?
-- What is the first combat formula?
+- What are the first region, skill, or combat-level unlocks?
+- What is the exact Perception-aware combat level formula?
 - What should death or failure do in passive combat?
 - Should progression be mostly linear, region-based, skill-gated, achievement-gated, or mixed?
 - How punishing should rare drops be?

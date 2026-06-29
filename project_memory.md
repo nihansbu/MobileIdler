@@ -74,8 +74,8 @@ Future save system may move to IndexedDB once save size or structured backup nee
 - Additional character slots are account-wide progression/QoL unlocks gated by milestones and RAP costs.
 - Multiple characters can run activities at the same time.
 - Each individual character can only run one active activity at a time.
-- Account-wide state includes RAP, achievements, and inventory.
-- Character-bound state includes skills and each character's current activity.
+- Account-wide state includes RAP, skills, combat level, achievements, inventory, unlock flags, collections, and long-term progression.
+- Character-bound state currently includes race, class, passives, and each character's current activity. Characters act as assignable workers that feed progress back into the account.
 - Character creation must be data-driven: races, classes, passives, allowed race/class combinations, locked combinations, and unlock requirements should live in content definitions rather than hard-coded UI branches.
 - Race/class combinations can be locked initially and unlocked later through meta-progression.
 
@@ -101,6 +101,8 @@ Expected module areas:
 - Loot tables
 - Mounts and collectibles
 - Skills
+- Universal requirements
+- Universal rewards
 - Achievements
 - Account-wide bonuses and quality-of-life unlocks
 - Unlocks and prerequisites
@@ -125,6 +127,107 @@ Current account-flow direction:
 - Character select/character detail still exists, but it is a management view, not the only way to play.
 
 Implementation implication: route/state design should be account-first. Character IDs should be referenced by activities; UI screens should not assume there is one globally selected active character.
+
+## Universal Requirements And Rewards Architecture
+
+Design decision added on 2026-06-29: the game needs one flexible requirements and rewards model that can be reused by activities, items, quests, bosses, regions, skills, unlocks, account upgrades, race/class combinations, and future systems.
+
+Requirements should be optional and data-driven. Supported requirement types should include, at minimum:
+
+- Skill level requirements.
+- Quest completion requirements.
+- Item ownership or collection requirements.
+- Achievement requirements.
+- Account unlock flags.
+- Region progress or point-of-interest discovery.
+- Boss kill counts or dungeon completion.
+- RAP cost or spend requirements.
+- Combat level requirements.
+- Race/class or character-type requirements where content intentionally depends on the worker.
+
+Requirements are hard gates for now. If the account does not meet the requirement, the content cannot be started, completed, bought, equipped, or claimed, depending on the entity. Temporary boosts and potion-style bypasses are intentionally out of scope for the initial system.
+
+Rewards should also be optional and data-driven. Supported reward types should include, at minimum:
+
+- Skill XP.
+- RAP changes where needed.
+- Items or stackable resources.
+- Drop table rolls with explicit chances, including ultra-rare drops such as 1/500 mounts.
+- Unlock flags.
+- Achievement progress or completion.
+- Quest progress.
+- Region progress.
+- Account upgrades or quality-of-life unlocks.
+
+Implementation implication: build requirement evaluation and reward application as shared game-domain helpers, not as UI-specific branches. Content definitions should be able to declare `requirements` and `rewards` without every screen inventing its own format.
+
+## Account-Wide Skill System Architecture
+
+Design decision added on 2026-06-29: skills are account-wide progression, not character-bound progression. Characters are the workers that perform actions, but XP and unlock progress go back into the account.
+
+Skill system requirements:
+
+- Include the full RuneScape-style skill roster used by this project.
+- Levels run from 1 to 120.
+- Store XP as the source of truth and derive visible levels from the XP curve.
+- Use the RuneScape XP curve, with level 99 around 13,034,431 XP and level 120 around 104,273,167 XP.
+- XP may continue beyond level 120 up to a hard cap of 200,000,000 XP per skill.
+- All skills should be visible in the Skills screen from the start.
+- Locked skills still count toward total level.
+- Locked skills cannot receive XP before they are unlocked.
+- Invention, Necromancy, and Sailing are locked until total level 800.
+- Total level should include locked skills, using their current level values.
+- Skill levels can be used as requirements by any content entity.
+- Skill XP can be granted by any content entity through the universal reward system.
+- Activities do not need a single fixed main skill. Each activity can define no skill XP, one skill XP reward, or several skill XP rewards.
+
+Initial skill roster:
+
+- Attack
+- Strength
+- Defence
+- Constitution
+- Ranged
+- Magic
+- Prayer
+- Summoning
+- Necromancy
+- Perception
+- Mining
+- Smithing
+- Fishing
+- Cooking
+- Firemaking
+- Woodcutting
+- Crafting
+- Fletching
+- Runecrafting
+- Construction
+- Agility
+- Herblore
+- Thieving
+- Slayer
+- Farming
+- Hunter
+- Divination
+- Dungeoneering
+- Invention
+- Archaeology
+- Sailing
+
+Combat level is account-wide and replaces character level as the main power indicator. Every character on the account has the same combat level. The combat level should be displayed with two decimal places. It should follow the official RuneScape-style combat level formula as closely as possible, adapted to include Perception as a normal combat skill alongside the other combat skills. Combat level itself can later be used as a requirement type.
+
+Open technical implementation choice: define the exact formula adaptation for Perception before coding combat level. The current design intent is that Perception is not a side stat; it contributes as a real combat skill in the same spirit as Attack, Strength, Defence, Magic, Ranged, Prayer, Summoning, Necromancy, and Constitution.
+
+Implementation plan for the next coding step:
+
+1. Add skill definitions and XP-curve helpers under the game/data layer.
+2. Extend account save state with account-wide skill XP and unlocked skill flags.
+3. Add a schema migration or defensive initialization path for existing localStorage saves.
+4. Add shared requirement and reward types plus evaluator/applicator helpers.
+5. Add combat level and total level selectors derived from account skills.
+6. Add a dedicated Skills screen or subpage and expose it through navigation.
+7. Keep old MVP character XP/level only as temporary legacy UI until combat level fully replaces it.
 
 ## Character Creation Architecture
 
@@ -159,6 +262,8 @@ Required direction:
 - Prefer robust browser storage suited for larger structured saves, likely IndexedDB or a tested abstraction over it.
 - Consider automatic periodic save plus manual backup.
 - Design for many variables, items, skills, achievements, unlock flags, timers, and character records.
+- Account skill XP and skill unlock state must be migration-safe because skills are a long-term progression layer.
+- Save data should keep skill XP as account state; visible levels and total level should be derived from definitions and XP tables.
 - Offline progress must count.
 - Timed activities should save their start time, expected end time, owner character ID, activity ID, costs, and relevant resolution data.
 - On app startup or resume, completed activities should be resolved from saved timestamps.
@@ -513,6 +618,28 @@ Files involved:
 - `project_memory.md`
 - `game_design.md`
 
+### Account-Wide Skills, Requirements, And Rewards Design
+
+Problem: The next major content layer needs to support RuneScape-style skills, hard unlock gates, loot tables, rare drops, combat requirements, account upgrades, and future quests without scattering custom logic across every screen.
+
+Successful solution: Defined a shared data-driven architecture where skills are account-wide, characters act as workers, and content can declare optional `requirements` and `rewards`. Requirements are hard gates for now. Rewards can grant XP, items, drop-table rolls, unlock flags, achievement progress, quest progress, region progress, or account upgrades.
+
+Important implementation details:
+
+- Skills belong to the account, not individual characters.
+- XP is stored per account skill and levels are derived from the RuneScape XP curve.
+- Skills run from level 1 to 120, with XP continuing up to 200,000,000 per skill.
+- Invention, Necromancy, and Sailing are visible but locked until total level 800.
+- Locked skills still count toward total level but cannot receive XP until unlocked.
+- Combat level is account-wide, shown with two decimals, and replaces character level as the primary shared power indicator.
+- Perception is a real combat skill and should be integrated into the combat-level formula rather than treated as a side stat.
+- Combat level can later be used as a requirement type.
+
+Files involved:
+
+- `project_memory.md`
+- `game_design.md`
+
 ### Stale Vite Module After Deleted Screen
 
 Problem: After deleting `src/screens/CharactersScreen.tsx`, the already-running Vite dev server on port 5173 continued serving a stale browser module graph that requested the deleted file, leaving the local app blank even though `npm run build` succeeded.
@@ -563,7 +690,8 @@ Successful solution: Documented the following current decisions:
 - Multiple characters can be active at the same time.
 - One active activity per character.
 - RAP, achievements, and inventory are account-wide.
-- Skills are character-bound.
+- Skills are account-wide.
+- Combat level is account-wide and replaces character level as the primary shared power indicator.
 - Offline activity progress must count.
 - Inventory is not required for the first prototype.
 - Icon direction is clean high-fantasy mobile game art.
