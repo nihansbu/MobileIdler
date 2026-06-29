@@ -238,6 +238,8 @@ Confirmed current state:
 - Confirmed live mobile smoke test on `https://nihansbu.github.io/MobileIdler/`: account creation, character creation, RAP grant, activity start, and account return all passed without console errors.
 - User workflow preference added on 2026-06-29: if the user sends an image without an explicit implementation prompt, only describe what is visible and do not change code.
 - User workflow preference added on 2026-06-29: do not run a full deploy cycle for a tiny isolated UI fix when it can be bundled with useful feature work.
+- Account UI decision added on 2026-06-29: character management belongs inside the Account screen, not as a primary bottom-nav item.
+- Character slot UX decision added on 2026-06-29: buying/unlocking a character slot must not automatically prompt character creation. It should only make capacity available; the player creates a character later by pressing a Create button.
 
 Required documentation workflow:
 
@@ -255,6 +257,7 @@ Required publish workflow:
 - Push to `main` so GitHub Actions updates the GitHub Pages deployment.
 - If the Pages run fails, fix the deployment problem before calling the work complete.
 - For image-only messages, respond with an observation/description only unless the user also asks for a change.
+- If Vite serves a stale deleted module after a structural refactor, start a fresh dev server on a new port and test there instead of debugging a phantom source import.
 
 ## Known Working Commands
 
@@ -385,6 +388,72 @@ Files involved:
 - `src/styles.css`
 - `.gitignore`
 - `project_memory.md`
+
+### Account-Integrated Character Management
+
+Problem: The separate Characters bottom-nav item made the game feel character-first instead of account-first. The user wanted character management moved into Account, while preserving player agency after buying a character slot.
+
+Successful solution: Removed Characters from the primary bottom navigation and moved character creation into the Account screen. The Account screen now owns roster display, first-character creation, optional creation for free slots, slot unlock display, assignment entry point, XP progress, and active activity timers.
+
+Important implementation details:
+
+- `ViewId` now contains `account`, `activities`, and `progress`.
+- `CharacterCreator` is a reusable component under `src/components/`.
+- `AccountScreen` controls whether the creation panel is open.
+- Unlocking the second slot only increases `characterSlots`; it does not open the creation panel.
+- Character cards show level, race, class, idle/busy status, XP progress, and active activity remaining time.
+- `xpForNextLevel` is exported from `src/game/simulation.ts` so UI and simulation use the same level threshold.
+- Activity log entries now mention level gains when a completed activity causes a level-up.
+- Activity category tabs now filter the visible activities.
+
+Commands used:
+
+```powershell
+npm run build
+```
+
+Local browser smoke test covered:
+
+- Characters nav item is no longer visible.
+- First character can be created from Account.
+- Locked race/class combinations remain disabled.
+- Buying the next character slot does not open character creation automatically.
+- Activity assignment still works after the navigation change.
+- Account screen shows active activity timer and XP block.
+
+Files involved:
+
+- `src/App.tsx`
+- `src/types.ts`
+- `src/components/AppShell.tsx`
+- `src/components/CharacterCreator.tsx`
+- `src/screens/AccountScreen.tsx`
+- `src/screens/ActivitiesScreen.tsx`
+- `src/game/simulation.ts`
+- `src/styles.css`
+- `project_memory.md`
+- `game_design.md`
+
+### Stale Vite Module After Deleted Screen
+
+Problem: After deleting `src/screens/CharactersScreen.tsx`, the already-running Vite dev server on port 5173 continued serving a stale browser module graph that requested the deleted file, leaving the local app blank even though `npm run build` succeeded.
+
+Successful solution: Started a fresh Vite dev server on port 5174 and reran the Playwright smoke test there. The fresh server loaded the current source graph correctly.
+
+Commands used:
+
+```powershell
+npm run build
+```
+
+```powershell
+npm run dev -- --port 5174
+```
+
+Files involved:
+
+- `src/screens/CharactersScreen.tsx`
+- `src/App.tsx`
 
 ### Initial Project Memory Setup
 

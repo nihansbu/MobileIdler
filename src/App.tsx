@@ -3,7 +3,6 @@ import { AppShell } from './components/AppShell';
 import { AccountSetup } from './screens/AccountSetup';
 import { AccountScreen } from './screens/AccountScreen';
 import { ActivitiesScreen } from './screens/ActivitiesScreen';
-import { CharactersScreen } from './screens/CharactersScreen';
 import { ProgressScreen } from './screens/ProgressScreen';
 import { createDefaultAccount, loadAccount, parseAccountBackup, resetAccount, saveAccount } from './game/save';
 import { canUnlockSecondSlot, resolveCompletedActivities } from './game/simulation';
@@ -16,6 +15,7 @@ export function App() {
     return loaded ? resolveCompletedActivities(loaded) : null;
   });
   const [activeView, setActiveView] = useState<ViewId>('account');
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     if (account) {
@@ -25,7 +25,9 @@ export function App() {
 
   useEffect(() => {
     const interval = window.setInterval(() => {
-      setAccount((current) => (current ? resolveCompletedActivities(current) : current));
+      const currentTime = Date.now();
+      setNow(currentTime);
+      setAccount((current) => (current ? resolveCompletedActivities(current, currentTime) : current));
     }, 1000);
 
     return () => window.clearInterval(interval);
@@ -106,12 +108,13 @@ export function App() {
       {activeView === 'account' && (
         <AccountScreen
           account={account}
+          now={now}
           onAddRap={() => updateAccount((current) => ({ ...current, rap: current.rap + 10000 }))}
+          onCreateCharacter={createCharacter}
           onUnlockSlot={unlockSlot}
           onAssignActivity={() => setActiveView('activities')}
         />
       )}
-      {activeView === 'characters' && <CharactersScreen account={account} onCreateCharacter={createCharacter} />}
       {activeView === 'activities' && <ActivitiesScreen account={account} onStartActivity={startActivity} />}
       {activeView === 'progress' && <ProgressScreen account={account} onImportBackup={importBackup} onReset={hardReset} />}
     </AppShell>

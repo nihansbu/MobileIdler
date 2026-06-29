@@ -75,7 +75,9 @@ export function ActivitiesScreen({ account, onStartActivity }: ActivitiesScreenP
       </div>
 
       <div className="activity-list">
-        {activities.map((activity) => {
+        {activities
+          .filter((activity) => activity.category === tab)
+          .map((activity) => {
           const canAfford = account.rap >= activity.rapCost;
           const Icon = activity.category === 'explore' ? Icons.map : activity.category === 'train' ? Icons.endurance : Icons.combat;
           return (

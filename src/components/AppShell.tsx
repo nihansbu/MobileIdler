@@ -12,7 +12,6 @@ interface AppShellProps {
 
 const navItems: Array<{ id: ViewId; label: string; icon: keyof typeof Icons }> = [
   { id: 'account', label: 'Account', icon: 'account' },
-  { id: 'characters', label: 'Characters', icon: 'shield' },
   { id: 'activities', label: 'Activities', icon: 'combat' },
   { id: 'progress', label: 'Progress', icon: 'bars' },
 ];

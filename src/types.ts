@@ -2,7 +2,7 @@ export type RaceId = 'human' | 'orc' | 'undead';
 export type ClassId = 'warrior' | 'paladin' | 'mage';
 export type ActivityId = 'explore_first_region' | 'train_endurance' | 'fight_training_dummy';
 
-export type ViewId = 'account' | 'characters' | 'activities' | 'progress';
+export type ViewId = 'account' | 'activities' | 'progress';
 
 export type CharacterStatus = 'idle' | 'busy';
 

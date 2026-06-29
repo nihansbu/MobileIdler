@@ -60,12 +60,15 @@ After account selection:
 - The player can assign an idle character to an activity directly from the account view or from an activity view.
 - The player should not need to exit back to a character-select screen every time they want to manage another character.
 
-Character select still exists as a management view:
+Character management lives inside the Account dashboard for the current MVP:
 
-- Create character if a free slot exists.
-- Inspect each character.
+- Create a character if a free slot exists.
+- Inspect each character in the roster.
+- See class, race, level, XP progress, current activity, and status.
+- Assign idle characters to activities from the roster.
 - Rename or customize characters if supported later.
-- See class, race, level, current activity, and status.
+
+Buying a character slot should not automatically force or open character creation. It only increases available capacity. The player may create a new character later by pressing a Create button.
 
 Design decision: the player plays the account, not one isolated character session.
 
@@ -570,7 +573,7 @@ Early prototype:
 - Each race has one passive.
 - Each class has two passives.
 - Account dashboard with character activity overview.
-- Character management/select.
+- Character management inside the Account screen.
 - Basic character overview.
 - One or more timed activities.
 - Basic skill or exploration progression.
@@ -586,8 +589,12 @@ Current MVP status:
 - RAP can be gained with the prototype `+10,000 RAP` button.
 - One character slot exists at start.
 - The next character slot can be unlocked for 2,000 RAP in the MVP.
+- Buying a new character slot does not auto-open character creation.
 - Character creation supports Human, Orc, Undead, Warrior, Paladin, and Mage with starter restrictions.
+- Character creation is launched from the Account screen rather than a separate Characters nav item.
+- Character cards show XP progress and active activity timers.
 - Activity assignment supports Explore First Region, Train Endurance, and Fight Training Dummy.
+- Activity category tabs filter visible activities.
 - Activities cost RAP, assign the character, and resolve from timestamps when complete.
 - Progress screen includes a manual JSON save export/import backup panel.
 - Inventory, items, dungeons, bossing, and achievements are not implemented yet.
@@ -618,10 +625,12 @@ Later:
 - The setting should remain generic high fantasy, using races like humans, orcs, and undead rather than specific named external IP characters.
 - The game flow is account-first: select a local account/save profile, then manage all characters from inside that account.
 - The player plays the account, while characters are assignable workers inside that account.
+- Character management is not a primary bottom-nav destination in the current MVP; it is part of Account.
 - RAP is the central resource connecting real life and in-game progress.
 - The game should support multiple characters.
 - The account starts with one character slot.
 - Additional character slots are unlocked through account-wide milestones and RAP costs.
+- Unlocking a character slot must not force immediate character creation.
 - Multiple characters can run activities simultaneously.
 - Each character can only run one activity at a time.
 - Each character has a race and class.

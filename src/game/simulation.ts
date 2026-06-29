@@ -1,14 +1,14 @@
 import { getActivity } from './content';
 import type { AccountSave, ActivityLogEntry, CharacterSave } from '../types';
 
-const xpForLevel = (level: number) => level * 100;
+export const xpForNextLevel = (level: number) => level * 100;
 
 const awardXp = (character: CharacterSave, xp: number): CharacterSave => {
   let nextLevel = character.level;
   let nextXp = character.xp + xp;
 
-  while (nextXp >= xpForLevel(nextLevel)) {
-    nextXp -= xpForLevel(nextLevel);
+  while (nextXp >= xpForNextLevel(nextLevel)) {
+    nextXp -= xpForNextLevel(nextLevel);
     nextLevel += 1;
   }
 
@@ -39,12 +39,13 @@ export const resolveCompletedActivities = (account: AccountSave, now = Date.now(
 
     const activity = getActivity(character.activity.activityId);
     const updated = awardXp(character, activityXp(activity.id));
+    const gainedLevels = updated.level - character.level;
     logEntries.push({
       id: crypto.randomUUID(),
       at: now,
       characterName: character.name,
       activityName: activity.name,
-      result: activity.rewardLabel,
+      result: gainedLevels > 0 ? `${activity.rewardLabel}. Level +${gainedLevels}` : activity.rewardLabel,
     });
 
     return {
