@@ -227,9 +227,12 @@ Confirmed current state:
 - Repository exists locally at `C:\Users\nikla\Documents\MobileIdler`.
 - The repository now contains a React/Vite MVP, project documentation, and the asset pipeline.
 - GitHub repository target: `nihansbu/MobileIdler`.
-- The repository should remain private if the GitHub account/plan supports private GitHub Pages for this project.
+- Current GitHub repository: private `nihansbu/MobileIdler`.
 - Deployment target: GitHub Pages via `.github/workflows/deploy-pages.yml`.
 - The Pages workflow builds with `npm ci` and `npm run build`, uploads `dist`, and deploys from GitHub Actions.
+- On 2026-06-29, GitHub rejected Pages enablement for the private repository on the current account plan: `Your current plan does not support GitHub Pages for this repository.`
+- Do not make the source repository public without explicit user approval.
+- Practical fallback if the current plan remains unchanged: keep `nihansbu/MobileIdler` private and deploy only built `dist` files to a separate public GitHub Pages repository, after user approval.
 
 Required documentation workflow:
 
@@ -280,6 +283,10 @@ gh run list --workflow deploy-pages.yml --limit 1
 ```
 
 ```powershell
+gh run view <run-id> --log-failed
+```
+
+```powershell
 Get-Content -Raw -LiteralPath 'assets\manifests\asset-manifest.example.json' | ConvertFrom-Json | Out-Null; Write-Output 'asset manifest example JSON is valid'
 ```
 
@@ -303,13 +310,15 @@ Get-Content -Raw -LiteralPath 'assets\manifests\asset-manifest.json' | ConvertFr
 
 Problem: The MVP needed to be available through a live link after tested implementation work, while keeping the GitHub repository as private as practical.
 
-Successful solution: Added a GitHub Actions workflow at `.github/workflows/deploy-pages.yml`. The workflow runs on pushes to `main`, installs dependencies with `npm ci`, builds with `npm run build`, uploads the `dist` folder as a Pages artifact, and deploys with GitHub Pages actions.
+Partial solution: Added a GitHub Actions workflow at `.github/workflows/deploy-pages.yml`. The workflow runs on pushes to `main`, installs dependencies with `npm ci`, builds with `npm run build`, uploads the `dist` folder as a Pages artifact, and deploys with GitHub Pages actions. The source repository was created as private at `nihansbu/MobileIdler` and pushed to `main`.
 
 Important implementation details:
 
 - Local verification still matters before pushing. The current minimum check is `npm run build`.
 - The deployed Pages site should be treated as publicly reachable by link.
 - Future completed prompts should be committed and pushed to `main` after testing so the live Pages version updates automatically.
+- Current blocker: GitHub Pages cannot be enabled for the private repository on the current account plan.
+- Next decision needed: either use a GitHub plan that supports Pages for private repositories, make the source repo public, or create a separate public deploy-only repository containing built static files.
 
 Files involved:
 
@@ -473,6 +482,27 @@ Files involved:
 - `game_design.md`
 
 ## Failed Approaches
+
+### Enabling GitHub Pages Directly On Private Repo With Current Plan
+
+Problem: The project should stay private while being deployed to GitHub Pages.
+
+Failed approach: Creating a private repository and enabling GitHub Pages directly on that repository with the current GitHub account plan.
+
+Commands used:
+
+```powershell
+gh repo create MobileIdler --private --source=. --remote=origin --push
+gh api --method POST repos/nihansbu/MobileIdler/pages -f build_type=workflow
+gh run view 28387915916 --log-failed
+```
+
+Observed result:
+
+- `gh api` returned `Your current plan does not support GitHub Pages for this repository.`
+- The first Pages workflow failed at `actions/configure-pages` because the repository had no enabled Pages site.
+
+Do not repeat this exact approach unless the GitHub plan changes. Safer fallback: keep the source repository private and deploy `dist` to a separate public Pages repository after user approval.
 
 ### Ornate High-Fantasy Mockups As Early UI Target
 
