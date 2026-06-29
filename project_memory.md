@@ -234,6 +234,8 @@ Confirmed current state:
 - On 2026-06-29, GitHub rejected Pages enablement for the private repository on the current account plan: `Your current plan does not support GitHub Pages for this repository.`
 - The GitHub Actions build step itself succeeds on GitHub. The deploy pipeline fails at `actions/configure-pages` because Pages cannot be enabled for this private repo in the current setup.
 - The user approved making the source repository public on 2026-06-29 so the app can be tested live.
+- Confirmed successful public Pages deployment on 2026-06-29: GitHub Actions run `28388691584`.
+- Confirmed live mobile smoke test on `https://nihansbu.github.io/MobileIdler/`: account creation, character creation, RAP grant, activity start, and account return all passed without console errors.
 
 Required documentation workflow:
 
@@ -300,6 +302,10 @@ gh workflow run deploy-pages.yml --ref main
 ```
 
 ```powershell
+gh run watch <run-id> --exit-status
+```
+
+```powershell
 Get-Content -Raw -LiteralPath 'assets\manifests\asset-manifest.example.json' | ConvertFrom-Json | Out-Null; Write-Output 'asset manifest example JSON is valid'
 ```
 
@@ -331,6 +337,8 @@ Important implementation details:
 - The deployed Pages site is publicly reachable at `https://nihansbu.github.io/MobileIdler/`.
 - Future completed prompts should be committed and pushed to `main` after testing so the live Pages version updates automatically.
 - After pushing, verify the GitHub Actions Pages run and check that the live URL returns HTTP 200.
+- Run `28388691584` confirmed the public Pages path works end to end. The deploy step can take several minutes after the build job finishes.
+- A Playwright mobile smoke test against the live URL confirmed the MVP flow after deployment.
 
 Files involved:
 
