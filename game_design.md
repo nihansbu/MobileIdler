@@ -689,7 +689,8 @@ Design priorities:
 - Top bar and bottom navigation should be separately collapsible to free more body space on mobile.
 - Top bar and bottom navigation collapse/expand should use matching thin arrow rows.
 - The top bar plus button is the current prototype RAP gain action.
-- The expanded top bar should include compact active-character information: character icon, name, race, class, and shared combat level.
+- The expanded top bar should include compact active-character information: character icon, name, race, and class.
+- Account-wide combat level should be displayed as its own top-bar stat with an icon and number, not as part of the character text.
 - The expanded top bar should include quick character navigation arrows. The left arrow points toward higher-priority idle characters and should highlight when one is available. The right arrow points toward lower-priority idle characters. Disabled arrows should be greyed out.
 - The Activity screen should use the top-bar active character instead of showing its own repeated character overview block.
 - Character creation can become visually richer later, but should start as a simple data-driven wizard.
@@ -765,7 +766,9 @@ Open questions:
 - What size should icons be authored at?
 - Should backgrounds be atmospheric illustrations, map-like panels, or minimal textured surfaces?
 
-Current visual direction: clean high-fantasy mobile game art. Pixel art is not the default style anymore, but can be used later for a specific asset family if intentionally chosen.
+Current icon direction: old-school low-pixel fantasy RPG icons inspired by early MMORPG inventory icons. Icons should be chunky, charming, grounded, readable at 24-32px, and low-detail rather than polished high-fantasy or Warcraft-like.
+
+Icons should generally be generated as isolated subjects and then used with transparent backgrounds on top of CSS-authored UI tiles. The first accepted direction for the combat-level icon is two crossed short iron swords without a shield, crest, badge, or magical glow.
 
 Primary image pipeline document: `image_pipeline.md`.
 
@@ -811,7 +814,7 @@ Current MVP status:
 - Character creation is launched from the Account screen rather than a separate Characters nav item.
 - Account now shows a prioritized roster instead of a simple character list.
 - The roster supports up to seven slots, shows only unlocked slots, and currently uses Move Mode for mobile-friendly slot movement.
-- The expanded top bar shows the active character, race, class, and shared combat level.
+- The expanded top bar shows the active character, race, class, combat-level icon stat, RAP, and RAP plus button.
 - Activities now use the active character from the top bar rather than an Activity-screen character selector.
 - Starting an activity automatically advances the active character to the next idle roster character when possible.
 - Roster slots show status, race/class, account combat level, and active activity timers.
@@ -891,7 +894,7 @@ Later:
 - Progression should be gated through combat level, skill levels, regions, achievements, item collection, boss kills, and RAP spending.
 - Offline progress counts and should resolve when the app is reopened.
 - The first prototype can omit inventory.
-- Clean high-fantasy mobile game art is the current visual direction.
+- Old-school low-pixel fantasy RPG icons are the current icon direction.
 - The game should be modular enough for long-term expansion.
 - Save stability is a core design requirement, not a later polish feature.
 

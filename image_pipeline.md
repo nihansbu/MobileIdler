@@ -8,18 +8,22 @@ The pipeline is intentionally reusable. Every future asset task should start by 
 
 ## Current Visual Direction
 
-Primary style: clean high-fantasy mobile game art.
+Primary icon style: old-school low-pixel fantasy RPG icons inspired by early MMORPG inventory icons. The direction should feel grounded, charming, chunky, and readable at small mobile sizes rather than polished high-fantasy.
+
+Primary UI style: minimal alpha/testing-friendly mobile UI built with code-native components. Richer fantasy theming can be layered in later after mechanics stabilize.
 
 Style rules:
 
-- Polished fantasy game UI, not generic SaaS/dashboard UI.
-- Clean illustrated fantasy, readable on mobile.
-- Rich but restrained materials: parchment, carved stone, dark metal, cloth banners, glass, subtle magic effects.
+- Old-school fantasy RPG icon language.
+- Low-pixel or pixel-like raster style with chunky shapes.
 - Strong silhouettes and simple compositions.
+- Limited palettes and simple 2-3 tone shading.
+- Practical medieval/fantasy materials: dull iron, worn leather, wood, muted brass, cloth, bone, stone.
+- Icons should be readable at 24-32px first, then still look charming at larger sizes.
 - High contrast where small mobile details matter.
 - During alpha/prototyping, prefer minimal code-native UI mockups over illustration-heavy fantasy screens.
 - No photorealism unless explicitly requested.
-- No pixel art by default. Pixel art can be used later for a specific asset family if intentionally chosen.
+- Avoid polished high-fantasy, Warcraft-like ornamentation, magical glow, realistic metal rendering, and painterly over-detail for icons.
 - No copyrighted characters, logos, or direct external-IP visual identifiers.
 - No watermark.
 - Avoid unreadable tiny text inside generated images.
@@ -34,9 +38,9 @@ Default direction:
 
 - Square master image.
 - Single centered object.
-- Clean high-fantasy icon painting.
+- Old-school low-pixel fantasy inventory icon.
 - Strong silhouette.
-- Simple readable lighting.
+- Simple readable lighting and limited detail.
 - No text.
 - Prefer transparent final PNG/WebP when used in UI.
 
@@ -59,6 +63,7 @@ Default direction:
 - Readable at small size.
 - Distinct color language by domain when useful.
 - No text.
+- Use transparent-background final assets placed onto CSS UI tiles rather than baking card backgrounds into the icon.
 
 Recommended master size: `1024x1024`.
 
@@ -195,7 +200,7 @@ Example:
   "type": "background",
   "path": "assets/generated/backgrounds/races/human_creation_bg.png",
   "usage": "character_creation.race.human",
-  "style": "clean_high_fantasy",
+  "style": "oldschool_low_pixel_fantasy_icon",
   "status": "draft",
   "promptFile": "assets/prompts/background-template.md"
 }
@@ -205,7 +210,8 @@ Example:
 
 Before accepting an asset:
 
-- It matches clean high-fantasy direction.
+- It matches the current style direction for its asset family.
+- Icons match the old-school low-pixel fantasy direction.
 - It is readable on mobile.
 - It has no watermark.
 - It has no unintended text.

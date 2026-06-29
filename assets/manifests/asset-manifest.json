@@ -1,7 +1,16 @@
 {
   "version": 1,
-  "style": "clean_high_fantasy_mobile_game",
+  "style": "oldschool_low_pixel_fantasy_icons",
   "assets": [
+    {
+      "id": "stat_combat_level",
+      "type": "stat_icon",
+      "path": "assets/generated/icons/stats/combat_level.png",
+      "usage": "topbar.combat_level",
+      "style": "oldschool_low_pixel_fantasy_icon",
+      "status": "accepted_style_anchor",
+      "source": "assets/generated/icons/stats/combat_level_master.png"
+    },
     {
       "id": "mockup_character_creation_race_selection_human",
       "type": "screen_mockup",

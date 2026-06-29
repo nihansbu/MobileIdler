@@ -300,7 +300,7 @@ Pipeline goals:
 - Prefer repeatable generation, normalization, sizing, and export steps.
 - Document successful commands and workflows once proven.
 
-Current visual direction: clean high-fantasy mobile game art. Pixel art is not the default anymore; it can still be used later for a specific asset family if intentionally chosen.
+Current icon direction: old-school low-pixel fantasy RPG icons inspired by early MMORPG inventory icons. The style should be chunky, charming, readable at 24-32px, grounded, and low-detail rather than polished high-fantasy or Warcraft-like. Transparent final icons should be placed onto CSS-authored UI tiles rather than baking backgrounds into the asset.
 
 Important UI direction update on 2026-06-29: early implementation UI should be minimal and alpha/testing-friendly, not ornate or illustration-heavy. Use clean code-native components for navigation, cards, rows, forms, and buttons while mechanics and data are still changing. Fantasy artwork and richer theming can be layered in later once systems stabilize.
 
@@ -331,7 +331,7 @@ Default asset paths:
 - `assets/generated/ui/...`
 - `assets/generated/mockups/...`
 
-Open decision: generate and review the first visual samples before locking final exact palette, icon shape language, and screen chrome.
+Current first icon style anchor: the combat-level icon should use two crossed short iron swords, no shield, no badge, no ornate crest, no magical glow, on a transparent final background.
 
 ## Development Workflow
 
@@ -815,6 +815,61 @@ Files involved:
 - `src/screens/AccountScreen.tsx`
 - `src/screens/ActivitiesScreen.tsx`
 - `src/styles.css`
+- `project_memory.md`
+- `game_design.md`
+
+### Combat Level Icon Asset And Top Bar Stat
+
+Problem: The first generated icon directions were too polished/high-fantasy. The user wanted a RuneScape-like old-school low-pixel icon style and asked to start by integrating a combat-level icon into the top bar.
+
+Successful solution: Generated an old-school low-pixel crossed-swords combat icon on a flat green chroma-key background, removed the background locally, preserved a master asset, created a 256x256 transparent app asset, registered it in the asset manifest, and imported it into the React top bar with Vite.
+
+Important implementation details:
+
+- Final app asset: `assets/generated/icons/stats/combat_level.png`.
+- Master asset: `assets/generated/icons/stats/combat_level_master.png`.
+- Manifest ID: `stat_combat_level`.
+- `src/components/AppShell.tsx` imports the image via `new URL('../../assets/generated/icons/stats/combat_level.png', import.meta.url).href`.
+- Combat level is now displayed as a separate top-bar stat with the crossed-swords icon and numeric value.
+- Combat level text was removed from the active-character text block because combat level is account-wide.
+- The right top-bar character arrow now uses the same amber `available` state as the left arrow when a lower-priority idle character is available.
+- `image-rendering: pixelated` is used for the top-bar combat icon so the low-pixel style survives scaling.
+
+Commands used:
+
+```powershell
+python -m pip install --user pillow
+```
+
+```powershell
+python "C:\Users\nikla\.codex\skills\.system\imagegen\scripts\remove_chroma_key.py" --input "tmp\imagegen\combat_level_chroma.png" --out "assets\generated\icons\stats\combat_level.png" --auto-key border --soft-matte --transparent-threshold 12 --opaque-threshold 220 --despill
+```
+
+```powershell
+npm run build
+```
+
+```powershell
+npm run dev -- --port 5179
+```
+
+Local browser smoke test covered:
+
+- Combat icon is visible in the top bar.
+- Active-character text no longer contains combat level.
+- Combat stat displays the numeric combat level next to the icon.
+- Right arrow has `character-switch available` when a lower-priority idle character exists.
+- Clicking the right arrow switches active character.
+- No console errors.
+
+Files involved:
+
+- `assets/generated/icons/stats/combat_level.png`
+- `assets/generated/icons/stats/combat_level_master.png`
+- `assets/manifests/asset-manifest.json`
+- `src/components/AppShell.tsx`
+- `src/styles.css`
+- `image_pipeline.md`
 - `project_memory.md`
 - `game_design.md`
 

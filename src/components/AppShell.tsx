@@ -3,6 +3,8 @@ import { Icons } from './icons';
 import { getClass, getRace } from '../game/content';
 import type { CharacterSave, ViewId } from '../types';
 
+const combatLevelIconUrl = new URL('../../assets/generated/icons/stats/combat_level.png', import.meta.url).href;
+
 interface AppShellProps {
   accountName: string;
   rap: number;
@@ -63,7 +65,7 @@ export function AppShell({
                 <Icons.profile size={21} />
               </div>
               <button
-                className="character-switch"
+                className={canSelectLowerPriority ? 'character-switch available' : 'character-switch'}
                 type="button"
                 aria-label="Select lower priority idle character"
                 onClick={onSelectLowerPriority}
@@ -77,7 +79,6 @@ export function AppShell({
                   <>
                     <strong>{activeCharacter.name}</strong>
                     <span>{race.name} {klass.name}</span>
-                    <span>Combat {combatLevel.toFixed(2)}</span>
                   </>
                 ) : (
                   <>
@@ -87,13 +88,19 @@ export function AppShell({
                 )}
               </div>
             </div>
-            <div className="rap-cluster">
-              <span>RAP</span>
-              <strong>{rap.toLocaleString()}</strong>
-              <button className="icon-button" type="button" aria-label="Add 10,000 RAP" onClick={onAddRap}>
-                <Icons.plus size={22} />
-              </button>
+            <div className="top-stat-strip">
+              <div className="top-stat" aria-label={`Combat level ${combatLevel.toFixed(2)}`}>
+                <img src={combatLevelIconUrl} alt="" />
+                <strong>{combatLevel.toFixed(2)}</strong>
+              </div>
+              <div className="top-stat rap-stat" aria-label={`${rap.toLocaleString()} RAP`}>
+                <span>RAP</span>
+                <strong>{rap.toLocaleString()}</strong>
+              </div>
             </div>
+            <button className="icon-button" type="button" aria-label="Add 10,000 RAP" onClick={onAddRap}>
+              <Icons.plus size={22} />
+            </button>
           </div>
         )}
         <button
