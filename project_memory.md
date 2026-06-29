@@ -181,7 +181,7 @@ Skill system requirements:
 - Skill XP can be granted by any content entity through the universal reward system.
 - Activities do not need a single fixed main skill. Each activity can define no skill XP, one skill XP reward, or several skill XP rewards.
 
-Initial skill roster:
+Initial skill roster uses only official RuneScape 3 and Old School RuneScape skills. Do not add homebrew skills to the roster unless the user explicitly asks for custom skills later.
 
 - Attack
 - Strength
@@ -192,7 +192,6 @@ Initial skill roster:
 - Prayer
 - Summoning
 - Necromancy
-- Perception
 - Mining
 - Smithing
 - Fishing
@@ -215,9 +214,9 @@ Initial skill roster:
 - Archaeology
 - Sailing
 
-Combat level is account-wide and replaces character level as the main power indicator. Every character on the account has the same combat level. The combat level should be displayed with two decimal places. It should follow the official RuneScape-style combat level formula as closely as possible, adapted to include Perception as a normal combat skill alongside the other combat skills. Combat level itself can later be used as a requirement type.
+Combat level is account-wide and replaces character level as the main power indicator. Every character on the account has the same combat level. The combat level should be displayed with two decimal places. Combat level itself can later be used as a requirement type.
 
-Open technical implementation choice: define the exact formula adaptation for Perception before coding combat level. The current design intent is that Perception is not a side stat; it contributes as a real combat skill in the same spirit as Attack, Strength, Defence, Magic, Ranged, Prayer, Summoning, Necromancy, and Constitution.
+Current combat formula decision: Slayer is treated as a combat skill for this project. In German RuneScape terminology this maps to Berserker. Requirements use the floored whole combat level, while display keeps two decimal places.
 
 Implementation plan for the next coding step:
 
@@ -359,6 +358,9 @@ Confirmed current state:
 - Implemented on 2026-06-29: first Skills screen exposed in the bottom navigation.
 - Implemented on 2026-06-29: first Explore module slice with Old Road, tick rewards, discovery tracks, and offline tick resolution.
 - Implemented on 2026-06-29: old visible Character XP/level UI was removed instead of migrated. Characters now display race/class, shared combat level, and current activity/tick state.
+- Skill roster correction added on 2026-06-29: the roster should include only official RuneScape 3 or Old School RuneScape skills unless the user explicitly asks for custom skills. Perception was removed as a homebrew skill.
+- Slayer/Berserker decision added on 2026-06-29: use the official English `Slayer` skill in UI/data, and treat it as the user's Berserker combat skill for this project's combat-level calculation.
+- Skills UI decision added on 2026-06-29: remove the `Req` summary stat, remove visible skill categories, and show all skills in one mobile viewport through a compact 4-column grid.
 
 Required documentation workflow:
 
@@ -642,7 +644,7 @@ Important implementation details:
 - Invention, Necromancy, and Sailing are visible but locked until total level 800.
 - Locked skills still count toward total level but cannot receive XP until unlocked.
 - Combat level is account-wide, shown with two decimals, and replaces character level as the primary shared power indicator.
-- Perception is a real combat skill and should be integrated into the combat-level formula rather than treated as a side stat.
+- Slayer is treated as a combat skill for this project; in German RuneScape terminology this maps to Berserker.
 - Combat level can later be used as a requirement type.
 
 Files involved:
@@ -716,6 +718,36 @@ Files involved:
 - `src/screens/ActivitiesScreen.tsx`
 - `src/screens/SkillsScreen.tsx`
 - `src/screens/ProgressScreen.tsx`
+- `src/styles.css`
+- `project_memory.md`
+- `game_design.md`
+
+### Skill Roster And Compact Skills UI Correction
+
+Problem: The first Skills screen contained a homebrew `Perception` skill, a confusing `Req` summary stat, visible skill categories, and a tall list layout that required scrolling on mobile.
+
+Successful solution: Removed `Perception`, kept the official `Slayer` skill and treated it as the user's Berserker combat skill for this project's combat-level calculation. Removed visible skill categories from the player-facing UI. Removed the `Req` summary stat. Reworked the Skills screen into a compact 4-column mobile grid with skill name, level number, and a mini XP-to-next progress bar. Locked skills show compact `TL 800` requirements.
+
+Important implementation details:
+
+- The skill roster should contain only official RuneScape 3 or Old School RuneScape skills unless the user explicitly asks for custom skills.
+- `src/game/save.ts` now normalizes skill XP through the current skill list, which drops stale `perception` XP from existing local saves.
+- The UI uses the official English skill name `Slayer`; design notes map this to Berserker in German RuneScape terminology.
+- The local mobile check confirmed 30 skill tiles, no `Perception`, no `Req`, no visible category labels, and no Skills-screen scroll at 393 x 852.
+
+Reference sources checked:
+
+- RuneScape official skill guide: https://www.runescape.com/game-guide/skills
+- Old School RuneScape Sailing: https://secure.runescape.com/m=news/sailing---the-journey-so-far
+
+Files involved:
+
+- `src/types.ts`
+- `src/data/skills.ts`
+- `src/data/activities.ts`
+- `src/game/save.ts`
+- `src/game/skills.ts`
+- `src/screens/SkillsScreen.tsx`
 - `src/styles.css`
 - `project_memory.md`
 - `game_design.md`

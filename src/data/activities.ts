@@ -12,7 +12,7 @@ export const activities: ActivityDefinition[] = [
     description: 'Send a character along the broken trade road to uncover early regional progress.',
     requirements: [],
     repeatRewards: [
-      { type: 'skillXp', skillId: 'perception', amount: 5 },
+      { type: 'skillXp', skillId: 'hunter', amount: 5 },
       { type: 'skillXp', skillId: 'agility', amount: 3 },
       { type: 'skillXp', skillId: 'constitution', amount: 2 },
     ],

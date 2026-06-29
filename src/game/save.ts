@@ -23,6 +23,15 @@ export const createInitialSkillXp = (): Record<SkillId, number> =>
     {} as Record<SkillId, number>,
   );
 
+const normalizeSkillXp = (skillXp: Partial<Record<string, number>> | null | undefined): Record<SkillId, number> =>
+  skills.reduce(
+    (accumulator, skill) => ({
+      ...accumulator,
+      [skill.id]: Math.max(0, Number(skillXp?.[skill.id] ?? 0)),
+    }),
+    {} as Record<SkillId, number>,
+  );
+
 const normalizeCharacter = (character: LegacyCharacterSave): CharacterSave => ({
   id: character.id,
   name: character.name,
@@ -39,11 +48,8 @@ const normalizeCharacter = (character: LegacyCharacterSave): CharacterSave => ({
 const normalizeAccount = (account: AccountSave): AccountSave => ({
   ...account,
   characters: account.characters.map(normalizeCharacter),
-  skillXp: {
-    ...createInitialSkillXp(),
-    ...account.skillXp,
-  },
-  unlockedSkillIds: account.unlockedSkillIds ?? [],
+  skillXp: normalizeSkillXp(account.skillXp),
+  unlockedSkillIds: (account.unlockedSkillIds ?? []).filter((skillId) => skills.some((skill) => skill.id === skillId)),
   regionProgress: account.regionProgress ?? {},
   updatedAt: Date.now(),
 });

@@ -73,10 +73,10 @@ export const getCombatLevel = (account: AccountSave) => {
   const prayer = getSkillLevel(account, 'prayer');
   const summoning = getSkillLevel(account, 'summoning');
   const necromancy = getSkillLevel(account, 'necromancy');
-  const perception = getSkillLevel(account, 'perception');
+  const slayer = getSkillLevel(account, 'slayer');
 
   const base = 0.25 * (defence + Math.max(10, constitution) + Math.floor(prayer / 2) + Math.floor(summoning / 2));
-  const strongestStyle = 0.325 * Math.max(attack + strength, Math.floor(ranged * 1.5), Math.floor(magic * 1.5), Math.floor(necromancy * 1.5), Math.floor(perception * 1.5));
+  const strongestStyle = 0.325 * Math.max(attack + strength, Math.floor(ranged * 1.5), Math.floor(magic * 1.5), Math.floor(necromancy * 1.5), Math.floor(slayer * 1.5));
 
   return Math.max(3, base + strongestStyle);
 };

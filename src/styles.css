@@ -261,7 +261,6 @@ button:disabled {
 .choice span,
 .detail-box span,
 .meta-grid span,
-.skill-row span,
 .track-row span,
 .reward-list span,
 .hint {
@@ -550,8 +549,7 @@ button:disabled {
   gap: 13px;
 }
 
-.activity-card-head,
-.skill-row-main {
+.activity-card-head {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
@@ -614,32 +612,102 @@ button:disabled {
   font-size: 12px;
 }
 
-.skill-list {
-  display: grid;
-  gap: 9px;
+.skill-summary {
+  grid-template-columns: repeat(2, 1fr);
+  padding: 10px 12px;
 }
 
-.skill-row {
-  display: grid;
-  gap: 10px;
-}
-
-.locked-skill {
-  opacity: 0.72;
-}
-
-.locked-skill .progress-fill {
-  background: var(--line-strong);
-}
-
-.skill-level {
-  text-align: right;
-  display: grid;
+.skill-summary .stat {
   gap: 2px;
 }
 
-.skill-level strong {
+.skill-summary .stat strong {
+  font-size: 19px;
+}
+
+.skills-title {
+  margin-bottom: 10px;
   font-size: 24px;
+}
+
+.skills-section {
+  margin-top: 10px;
+}
+
+.skill-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.skill-tile {
+  min-width: 0;
+  min-height: 47px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 4px;
+  background: rgba(17, 26, 35, 0.9);
+  display: grid;
+  align-content: space-between;
+  gap: 3px;
+}
+
+.skill-tile.locked-skill {
+  opacity: 0.72;
+}
+
+.skill-tile-head {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 4px;
+}
+
+.skill-tile-head strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 10px;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skill-tile-head span {
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.mini-progress {
+  position: relative;
+  height: 11px;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: #0b121a;
+}
+
+.mini-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--green);
+}
+
+.locked-skill .mini-progress-fill {
+  background: var(--line-strong);
+}
+
+.mini-progress span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #050806;
+  font-size: 8px;
+  font-weight: 850;
+  line-height: 1;
 }
 
 .progress-card {
@@ -668,8 +736,7 @@ button:disabled {
   .selected-character,
   .activity-row,
   .character-main-row,
-  .activity-card-head,
-  .skill-row-main {
+  .activity-card-head {
     grid-template-columns: 1fr;
   }
 

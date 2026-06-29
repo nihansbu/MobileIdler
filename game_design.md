@@ -300,7 +300,7 @@ Example region structure:
 - RAP cost: 5,000 per hour baseline, scaled down in the prototype for fast testing
 - Tick interval: 60 seconds
 - Discovery tracks: Region Quests, Treasures, Points of Interest, World Bosses, Secrets
-- Repeat rewards: Perception XP, Agility XP, Constitution XP
+- Repeat rewards: Hunter XP, Agility XP, Constitution XP
 - Completion reward: achievement or unlock flag when all tracks are complete
 
 Example early flow:
@@ -506,8 +506,10 @@ Planned:
 - Invention, Necromancy, and Sailing are visible but locked until account total level 800.
 - Locked skills still count toward total level.
 - Locked skills cannot receive XP before they are unlocked.
+- The skill roster should contain only official RuneScape 3 or Old School RuneScape skills unless the user explicitly asks to add custom skills later.
+- Do not add Perception or other homebrew skills by default.
 
-Initial skill roster:
+Current skill roster:
 
 - Attack
 - Strength
@@ -518,7 +520,6 @@ Initial skill roster:
 - Prayer
 - Summoning
 - Necromancy
-- Perception
 - Mining
 - Smithing
 - Fishing
@@ -563,7 +564,7 @@ Design direction:
 - Combat level is calculated from account combat skills.
 - Combat level should be displayed with two decimal places.
 - The current MVP formula is RuneScape-style and adapted for early visible progress: defence, Constitution with a baseline of 10, Prayer, Summoning, and the strongest combat style contribute to the displayed value.
-- Perception is a real combat skill and should be integrated into the combat level calculation like the other combat skills.
+- Slayer is a combat skill for this project and maps to Berserker in German RuneScape terminology.
 - Combat level can be used as a hard requirement for future bosses, quests, dungeons, or activities.
 - Combat level requirements use whole levels. For example, a requirement of Combat Level 3 checks the floored combat level even if the display shows 3.42.
 - Combat level is an important indicator for passive combat, but individual combat skills may also matter later.
@@ -579,15 +580,28 @@ Combat skills for this project:
 - Prayer
 - Summoning
 - Necromancy
-- Perception
+- Slayer
 
 Design example: an enemy weak to magic may be easier for an account whose combat profile is heavily supported by Magic, even if the overall combat level is similar to another account.
 
 Current formula decision:
 
-- Perception is treated as a full combat style for the strongest-style portion of the combat level calculation.
+- Slayer is treated as a combat skill for this project. In German RuneScape terminology this maps to Berserker.
 - Requirements use `Math.floor(combatLevel)`.
 - The formula may be tuned later after real combat content exists, but the current MVP implementation is good enough for visible early progress and hard-gate checks.
+
+## Skills UI
+
+The Skills screen should be compact enough to show the full current skill roster in one mobile viewport without scrolling.
+
+Current direction:
+
+- Show only Combat and Total in the top summary.
+- Do not show a separate Requirement/Req number in the summary.
+- Do not show skill categories such as combat, gathering, artisan, support, or elite in the player-facing tile UI.
+- Each skill should be a compact tile with skill name, level number, and a mini XP-to-next progress bar.
+- Locked skills still show their unlock requirement compactly, for example `TL 800`.
+- Long skill names may truncate in the compact alpha UI; icons can later improve recognition without increasing height.
 
 ## Items And Inventory
 
@@ -782,7 +796,7 @@ Current MVP status:
 - Explore currently contains the first region, Old Road.
 - Old Road runs for 5 minutes in the prototype, costs 400 RAP, and resolves every 10 seconds.
 - Old Road has discovery tracks for Region Quests, Treasures, Points of Interest, World Bosses, and Secrets.
-- Old Road repeat rewards grant Perception, Agility, and Constitution XP per tick.
+- Old Road repeat rewards grant Hunter, Agility, and Constitution XP per tick.
 - Skills screen shows account-wide skills, total level, combat level, XP progress, and locked skills.
 - Combat level requirements use the floored combat level, while display keeps two decimal places.
 - Activity tabs and activity rows remain visible when all characters are busy; Start buttons are disabled in that state.
@@ -841,7 +855,7 @@ Later:
 - Inventory is account-wide.
 - Skills are account-wide by default.
 - Combat level is account-wide and replaces character level as the primary shared power indicator.
-- Perception is a combat skill for this project.
+- Slayer/Berserker is a combat skill for this project.
 - Combat is passive: the player chooses a target/activity, then character power determines speed, danger, and rewards.
 - Boss and dungeon loot tables should be visible in the UI.
 - Collection progress should show obtained and missing drops.

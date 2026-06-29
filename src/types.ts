@@ -10,7 +10,6 @@ export type SkillId =
   | 'prayer'
   | 'summoning'
   | 'necromancy'
-  | 'perception'
   | 'mining'
   | 'smithing'
   | 'fishing'
@@ -64,7 +63,6 @@ export interface ClassDefinition {
 export interface SkillDefinition {
   id: SkillId;
   name: string;
-  category: 'combat' | 'gathering' | 'artisan' | 'support' | 'elite';
   description: string;
   unlockTotalLevel?: number;
 }
