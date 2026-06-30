@@ -704,6 +704,10 @@ Current MVP data decisions:
 - Collection items, mounts, pets, and skins are separate collection categories. Collector Items are their own high-volume category and should not be treated as normal inventory.
 - Records are aggregate account accomplishments, such as completed activities, region discoveries, unique explored regions, boss kills, dungeon runs, or future module counters.
 - Unique Records count distinct record lines with progress, while Records count aggregate total progress. For example, one boss killed 1,000 times would contribute one Unique Record and 1,000 Records.
+- Codex tiles should show both visual completion and explicit percentage text. The visual completion can be a subtle animated fill layer, but the percentage should still be readable as text.
+- Locked or uncompleted one-time entries should show no fill at 0% and full fill at 100% once completed.
+- Codex tabs should be switchable by tapping the segmented control and by swiping left or right across the Codex body on mobile.
+- Codex Records should only count content that still exists in current game data. Removed prototype activities or stale save entries should not inflate current records.
 
 Initial Codex tests:
 
@@ -716,6 +720,9 @@ Initial Codex tests:
 - Collection, Records, and Achievements tabs are visible and switch without starting gameplay actions.
 - No Activity-start buttons appear in the Codex.
 - Existing top bar and bottom navigation collapse behavior still works.
+- Codex tiles show percentage text and fill state.
+- Horizontal swipe changes Codex tabs.
+- Stale activity logs and stale region progress from removed content do not count toward current Codex Records.
 
 ## UI/UX Direction
 

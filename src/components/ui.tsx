@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from 'react';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -8,8 +8,12 @@ export function Button({ className = '', variant = 'primary', ...props }: Button
   return <button className={`button ${variant} ${className}`.trim()} {...props} />;
 }
 
-export function Panel({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <section className={`panel ${className}`.trim()}>{children}</section>;
+interface PanelProps extends HTMLAttributes<HTMLElement> {
+  children: ReactNode;
+}
+
+export function Panel({ children, className = '', ...props }: PanelProps) {
+  return <section className={`panel ${className}`.trim()} {...props}>{children}</section>;
 }
 
 export function Stat({ label, value }: { label: string; value: ReactNode }) {

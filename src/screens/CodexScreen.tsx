@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useRef, useState, type CSSProperties } from 'react';
 import { Panel } from '../components/ui';
-import { getCodexSummary, getCollectionPercent } from '../game/codex';
+import { getCodexPercent, getCodexPercentLabel, getCodexSummary } from '../game/codex';
 import type { AccountSave } from '../types';
 
 interface CodexScreenProps {
@@ -18,10 +18,47 @@ const codexTabs: Array<{ id: CodexTab; label: string }> = [
 
 export function CodexScreen({ account }: CodexScreenProps) {
   const [activeTab, setActiveTab] = useState<CodexTab>('overview');
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
   const summary = getCodexSummary(account);
+  const activeTabIndex = codexTabs.findIndex((tab) => tab.id === activeTab);
+
+  const getFillStyle = (percent: number) => ({ '--fill': `${percent}%` }) as CSSProperties;
+  const getFilledClassName = (baseClassName: string, percent: number) =>
+    `${baseClassName} filled-card${percent <= 0 ? ' empty-fill' : ''}`.trim();
+
+  const selectAdjacentTab = (direction: -1 | 1) => {
+    const nextIndex = Math.max(0, Math.min(codexTabs.length - 1, activeTabIndex + direction));
+    setActiveTab(codexTabs[nextIndex].id);
+  };
+
+  const handleTouchEnd = (x: number, y: number) => {
+    if (!touchStart.current) {
+      return;
+    }
+
+    const deltaX = x - touchStart.current.x;
+    const deltaY = y - touchStart.current.y;
+    touchStart.current = null;
+
+    if (Math.abs(deltaX) < 50 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) {
+      return;
+    }
+
+    selectAdjacentTab(deltaX < 0 ? 1 : -1);
+  };
 
   return (
-    <>
+    <div
+      className="codex-screen"
+      onTouchStart={(event) => {
+        const touch = event.changedTouches[0];
+        touchStart.current = { x: touch.clientX, y: touch.clientY };
+      }}
+      onTouchEnd={(event) => {
+        const touch = event.changedTouches[0];
+        handleTouchEnd(touch.clientX, touch.clientY);
+      }}
+    >
       <h1 className="screen-title codex-title">Codex</h1>
 
       <div className="segmented codex-tabs" role="tablist" aria-label="Codex sections">
@@ -42,10 +79,10 @@ export function CodexScreen({ account }: CodexScreenProps) {
       {activeTab === 'overview' && (
         <section className="codex-overview" aria-label="Codex overview">
           {summary.overviewStats.map((stat) => (
-            <Panel key={stat.label} className="codex-stat-tile">
+            <Panel key={stat.label} className={getFilledClassName('codex-stat-tile', stat.percent)} style={getFillStyle(stat.percent)}>
               <span>{stat.label}</span>
               <strong>{stat.value}</strong>
-              {stat.note && <small>{stat.note}</small>}
+              <small>{stat.percentLabel}</small>
             </Panel>
           ))}
         </section>
@@ -56,7 +93,11 @@ export function CodexScreen({ account }: CodexScreenProps) {
           <h2>Collection</h2>
           <div className="stack">
             {summary.collectionCategories.map((category) => (
-              <Panel key={category.id} className="codex-progress-row">
+              <Panel
+                key={category.id}
+                className={getFilledClassName('codex-progress-row', getCodexPercent(category.current, category.total))}
+                style={getFillStyle(getCodexPercent(category.current, category.total))}
+              >
                 <div className="progress-label">
                   <span>{category.label}</span>
                   <strong>
@@ -64,9 +105,9 @@ export function CodexScreen({ account }: CodexScreenProps) {
                   </strong>
                 </div>
                 <div className="progress-track">
-                  <div className="progress-fill" style={{ width: `${getCollectionPercent(category)}%` }} />
+                  <div className="progress-fill" style={{ width: `${getCodexPercent(category.current, category.total)}%` }} />
                 </div>
-                <small>{getCollectionPercent(category).toFixed(3)}%</small>
+                <small>{getCodexPercentLabel(category.current, category.total)}</small>
               </Panel>
             ))}
           </div>
@@ -78,16 +119,21 @@ export function CodexScreen({ account }: CodexScreenProps) {
           <h2>Records</h2>
           <div className="stack">
             {summary.recordRows.map((record) => (
-              <Panel key={record.id} className="codex-record-row">
+              <Panel key={record.id} className={getFilledClassName('codex-record-row', record.percent)} style={getFillStyle(record.percent)}>
                 <strong>{record.label}</strong>
                 <div>
                   <span>Unique</span>
-                  <b>{record.unique.toLocaleString()}</b>
+                  <b>
+                    {record.unique.toLocaleString()} / {record.uniqueTotal.toLocaleString()}
+                  </b>
                 </div>
                 <div>
                   <span>Total</span>
-                  <b>{record.total.toLocaleString()}</b>
+                  <b>
+                    {record.value.toLocaleString()} / {record.valueTotal.toLocaleString()}
+                  </b>
                 </div>
+                <small>{record.percentLabel}</small>
               </Panel>
             ))}
           </div>
@@ -99,7 +145,11 @@ export function CodexScreen({ account }: CodexScreenProps) {
           <h2>Achievements</h2>
           <div className="stack">
             {summary.achievementCategories.map((category) => (
-              <Panel key={category.id} className="codex-progress-row">
+              <Panel
+                key={category.id}
+                className={getFilledClassName('codex-progress-row', getCodexPercent(category.current, category.total))}
+                style={getFillStyle(getCodexPercent(category.current, category.total))}
+              >
                 <div className="progress-label">
                   <span>{category.label}</span>
                   <strong>
@@ -107,13 +157,14 @@ export function CodexScreen({ account }: CodexScreenProps) {
                   </strong>
                 </div>
                 <div className="progress-track">
-                  <div className="progress-fill" style={{ width: `${category.total > 0 ? (category.current / category.total) * 100 : 0}%` }} />
+                  <div className="progress-fill" style={{ width: `${getCodexPercent(category.current, category.total)}%` }} />
                 </div>
+                <small>{getCodexPercentLabel(category.current, category.total)}</small>
               </Panel>
             ))}
           </div>
         </section>
       )}
-    </>
+    </div>
   );
 }

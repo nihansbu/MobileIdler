@@ -164,6 +164,11 @@ Implementation notes:
 - Systems not implemented yet, such as quests, achievements, and real collection ownership, may expose placeholder totals and zero completed counts until save-backed data exists.
 - Collection percentage should be displayed with three decimal places to support thousands of collectibles.
 - Save backup/export/import needs a future Settings home if it is removed from the old Progress screen.
+- Codex tiles should expose a numeric percentage and a visual fill effect from the same derived `current / total` values.
+- The current fill effect is CSS-only: `filled-card` uses the `--fill` CSS variable plus animated pseudo-elements. `empty-fill` disables the layer at 0%.
+- Codex supports horizontal touch swipes across the body to move between Overview, Collection, Records, and Achievements.
+- Record calculations must filter to current content definitions. Activity logs count only names matching current activities from `src/data/activities.ts`; region progress counts only current Explore activity IDs.
+- The Account screen's region list also filters stale region progress so removed activity IDs cannot crash rendering.
 
 ## Universal Requirements And Rewards Architecture
 

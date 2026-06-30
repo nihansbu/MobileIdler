@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { CharacterCreator } from '../components/CharacterCreator';
 import { Icons } from '../components/icons';
 import { Button, EmptyState, Panel, Stat } from '../components/ui';
+import { activities } from '../data/activities';
 import { getActivity, getClass, getRace } from '../game/content';
 import { getRosterCharacter, getVisibleRosterSlots } from '../game/roster';
 import { canUnlockSecondSlot } from '../game/simulation';
 import { getCombatLevel, getTotalLevel } from '../game/skills';
-import type { AccountSave, ActivityId, CharacterSave } from '../types';
+import type { AccountSave, CharacterSave } from '../types';
 
 interface AccountScreenProps {
   account: AccountSave;
@@ -46,6 +47,10 @@ export function AccountScreen({
   const totalLevel = getTotalLevel(account);
   const visibleRosterSlots = getVisibleRosterSlots(account);
   const firstEmptySlotIndex = visibleRosterSlots.findIndex((characterId) => characterId === null);
+  const validRegionEntries = Object.entries(account.regionProgress).flatMap(([activityId, progress]) => {
+    const activity = activities.find((candidate) => candidate.id === activityId && candidate.module === 'explore');
+    return activity ? [{ activityId, activity, progress }] : [];
+  });
 
   const createCharacter = (character: CharacterSave) => {
     onCreateCharacter(character, creationSlotIndex);
@@ -197,11 +202,10 @@ export function AccountScreen({
       <section className="section">
         <h2>Regions</h2>
         <div className="stack">
-          {Object.entries(account.regionProgress).length === 0 ? (
+          {validRegionEntries.length === 0 ? (
             <EmptyState title="No region progress" body="Assign a character to Explore Old Road to begin uncovering the first region." />
           ) : (
-            Object.entries(account.regionProgress).map(([activityId, progress]) => {
-              const activity = getActivity(activityId as ActivityId);
+            validRegionEntries.map(({ activityId, activity, progress }) => {
               const total = activity.discoveryTracks.reduce((sum, track) => sum + track.max, 0);
               const current = activity.discoveryTracks.reduce((sum, track) => sum + (progress.tracks[track.id] ?? 0), 0);
               return (
