@@ -4,6 +4,8 @@ import { getClass, getRace } from '../game/content';
 import type { CharacterSave, ViewId } from '../types';
 
 const combatLevelIconUrl = new URL('../../assets/generated/icons/stats/combat_level.png', import.meta.url).href;
+const rapIconUrl = new URL('../../assets/generated/icons/currencies/rap.png', import.meta.url).href;
+const earnRapIconUrl = new URL('../../assets/generated/icons/actions/earn_rap.png', import.meta.url).href;
 
 interface AppShellProps {
   accountName: string;
@@ -94,12 +96,12 @@ export function AppShell({
                 <strong>{combatLevel.toFixed(2)}</strong>
               </div>
               <div className="top-stat rap-stat" aria-label={`${rap.toLocaleString()} RAP`}>
-                <span>RAP</span>
+                <img src={rapIconUrl} alt="" />
                 <strong>{rap.toLocaleString()}</strong>
               </div>
             </div>
             <button className="icon-button" type="button" aria-label="Add 10,000 RAP" onClick={onAddRap}>
-              <Icons.plus size={22} />
+              <img className="top-action-icon" src={earnRapIconUrl} alt="" />
             </button>
           </div>
         )}

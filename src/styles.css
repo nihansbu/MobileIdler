@@ -149,6 +149,7 @@ button:disabled {
 
 .top-character-copy {
   min-width: 0;
+  margin-left: 4px;
   display: grid;
   gap: 1px;
 }
@@ -220,6 +221,13 @@ button:disabled {
   background: transparent;
   display: grid;
   place-items: center;
+}
+
+.top-action-icon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  image-rendering: pixelated;
 }
 
 .screen {
@@ -984,6 +992,11 @@ button:disabled {
   .icon-button {
     width: 36px;
     height: 36px;
+  }
+
+  .top-action-icon {
+    width: 25px;
+    height: 25px;
   }
 
   .button.compact {

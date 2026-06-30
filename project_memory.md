@@ -333,6 +333,19 @@ Default asset paths:
 
 Current first icon style anchor: the combat-level icon should use two crossed short iron swords, no shield, no badge, no ornate crest, no magical glow, on a transparent final background.
 
+Top-bar icon implementation update on 2026-06-30:
+
+- Combat level, RAP currency, and the RAP-earning action now use generated old-school low-pixel PNG icons instead of text-only labels or lucide placeholders.
+- Top-bar icons are imported through Vite with `new URL(..., import.meta.url).href`.
+- Final transparent app assets are stored at:
+  - `assets/generated/icons/stats/combat_level.png`
+  - `assets/generated/icons/currencies/rap.png`
+  - `assets/generated/icons/actions/earn_rap.png`
+- Master transparent source assets are stored beside them with `_master.png` suffixes.
+- The RAP currency icon is a gold token with a walking/bootprint mark.
+- The earn-RAP action icon is a walking boot with a small gold token accent.
+- Both new icons are first-pass draft assets and can be replaced if the visual direction changes.
+
 ## Development Workflow
 
 Confirmed current state:

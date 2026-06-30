@@ -691,6 +691,8 @@ Design priorities:
 - The top bar plus button is the current prototype RAP gain action.
 - The expanded top bar should include compact active-character information: character icon, name, race, and class.
 - Account-wide combat level should be displayed as its own top-bar stat with an icon and number, not as part of the character text.
+- RAP should also be displayed as an icon-led top-bar stat instead of the literal `RAP` text where space is tight.
+- The prototype RAP gain action should use a custom activity/earning icon rather than a generic plus symbol.
 - The expanded top bar should include quick character navigation arrows. The left arrow points toward higher-priority idle characters and should highlight when one is available. The right arrow points toward lower-priority idle characters. Disabled arrows should be greyed out.
 - The Activity screen should use the top-bar active character instead of showing its own repeated character overview block.
 - Character creation can become visually richer later, but should start as a simple data-driven wizard.
