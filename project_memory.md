@@ -136,6 +136,35 @@ Current account-flow direction:
 
 Implementation implication: route/state design should be account-first. Character IDs should be referenced by activities; UI screens should not assume there is one globally selected active character.
 
+## Codex Module Architecture
+
+Design decision added on 2026-06-30: the Codex replaces the old Progress bottom-nav screen as the account's read-only long-term progress hub. It should summarize account completion, collections, records, and achievements without starting gameplay actions.
+
+Initial Codex structure:
+
+- Overview: compact account-level summary.
+- Collection: Collector Items, Mounts, Pets, Skins, and future cosmetic/collection groups.
+- Records: aggregate counters from gameplay modules, such as activity completions, exploration discoveries, unique explored regions, future boss kills, and dungeon runs.
+- Achievements: achievement completion and achievement points.
+
+Overview row-pair rules:
+
+- Combat Level beside Total Skill Level.
+- Skills at 99 beside Skills at 120.
+- Total Quests beside Quest Points.
+- Achievements beside Achievement Points.
+- Unique Records beside Records.
+- Collection count beside Collection percentage.
+
+Implementation notes:
+
+- `ViewId` should use `codex` rather than `progress`.
+- Bottom navigation label should be `Codex`.
+- Codex summary values should be derived from existing account state where possible.
+- Systems not implemented yet, such as quests, achievements, and real collection ownership, may expose placeholder totals and zero completed counts until save-backed data exists.
+- Collection percentage should be displayed with three decimal places to support thousands of collectibles.
+- Save backup/export/import needs a future Settings home if it is removed from the old Progress screen.
+
 ## Universal Requirements And Rewards Architecture
 
 Design decision added on 2026-06-29: the game needs one flexible requirements and rewards model that can be reused by activities, items, quests, bosses, regions, skills, unlocks, account upgrades, race/class combinations, and future systems.
@@ -500,6 +529,8 @@ Problem: Save stability is a core project requirement, and the first MVP only st
 
 Successful solution: Added a manual backup panel on the Progress screen. The player can export the current account save as JSON text and import a previously exported backup. Imported saves are validated against the current schema and then resolved for completed offline activities before being stored.
 
+Current status update on 2026-06-30: the old Progress screen has been replaced by Codex in the bottom navigation. The backup serialization/parsing helpers remain in `src/game/save.ts`, but the backup UI needs a future Settings location before it is user-facing again.
+
 Important implementation details:
 
 - Backup serialization lives in `src/game/save.ts`.
@@ -532,6 +563,65 @@ Files involved:
 - `.gitignore`
 - `project_memory.md`
 
+### Codex MVP
+
+Problem: The old Progress screen was too narrow for the game's long-term progression goals. The user wanted a Codex-style area that motivates collection and completion through overview stats, collections, records, and achievements.
+
+Successful solution: Replaced the Progress bottom-nav destination with Codex. Added `src/game/codex.ts` for derived Codex summary data and `src/screens/CodexScreen.tsx` for the UI. The Codex is read-only from a gameplay perspective and does not start activities.
+
+Important implementation details:
+
+- `ViewId` now uses `codex` instead of `progress`.
+- Bottom navigation label is `Codex` and uses a book icon.
+- Codex tabs are `Overview`, `Collection`, `Records`, and `Achievements`.
+- Overview stat pairs are implemented in the requested row order:
+  - Combat Level / Total Skill Level
+  - Skills at 99 / Skills at 120
+  - Total Quests / Quest Points
+  - Achievements / Achievement Points
+  - Unique Records / Records
+  - Collection / Collection %
+- Combat level, total level, and skill milestone counts are derived from account skill XP.
+- Records derive from existing account state: completed activities, exploration discoveries, and explored regions.
+- Collection totals are placeholder structure for the future collection save model: 3,800 Collector Items, 80 Mounts, 60 Pets, and 60 Skins for 4,000 total.
+- Achievement totals are placeholder structure: five starter categories with eight achievements each.
+- Collection percentage is formatted with three decimal places.
+- The old `src/screens/ProgressScreen.tsx` was removed to avoid maintaining two competing progress surfaces.
+
+Commands used:
+
+```powershell
+npm run build
+```
+
+```powershell
+npm run dev -- --port 5181
+```
+
+Local browser smoke test covered:
+
+- Bottom navigation shows `Codex` instead of `Progress`.
+- Codex opens to `Overview`.
+- Overview contains the requested stat pairs and values.
+- Collection, Records, and Achievements tabs switch correctly.
+- Records tab reflects seeded completed activities and exploration discoveries.
+- No `Explore` activity-start button appears in Codex.
+- Top bar collapse/expand still works.
+- No console errors.
+
+Files involved:
+
+- `src/App.tsx`
+- `src/types.ts`
+- `src/components/AppShell.tsx`
+- `src/components/icons.tsx`
+- `src/game/codex.ts`
+- `src/screens/CodexScreen.tsx`
+- `src/screens/ProgressScreen.tsx`
+- `src/styles.css`
+- `project_memory.md`
+- `game_design.md`
+
 ### Account-Integrated Character Management
 
 Problem: The separate Characters bottom-nav item made the game feel character-first instead of account-first. The user wanted character management moved into Account, while preserving player agency after buying a character slot.
@@ -540,7 +630,7 @@ Successful solution: Removed Characters from the primary bottom navigation and m
 
 Important implementation details:
 
-- `ViewId` now contains `account`, `activities`, and `progress`.
+- Superseded on 2026-06-30: `ViewId` now contains `account`, `activities`, `skills`, and `codex`.
 - `CharacterCreator` is a reusable component under `src/components/`.
 - `AccountScreen` controls whether the creation panel is open.
 - Unlocking the second slot only increases `characterSlots`; it does not open the creation panel.
@@ -611,7 +701,7 @@ Local browser smoke test covered:
 - `.screen` is the scroll container.
 - Top bar collapses and expands.
 - Bottom navigation collapses and expands separately.
-- Bottom navigation still contains Account, Activities, and Progress after expanding.
+- Superseded on 2026-06-30: bottom navigation now contains Account, Activities, Skills, and Codex after expanding.
 - Top bar plus adds 10,000 RAP.
 - Account screen no longer contains the old large RAP button.
 
@@ -718,7 +808,7 @@ Local browser smoke test covered:
 - Adding RAP through the top bar.
 - Starting Explore Old Road.
 - Waiting for a live tick and confirming skill XP appears in Skills.
-- Confirming Old Road region progress appears in Progress.
+- Superseded on 2026-06-30: Old Road region progress is now summarized through Codex Records and still appears on the Account screen.
 - Forcing a saved activity into the past and reloading to verify offline tick resolution.
 - Confirming completed activity count, region tracks, activity log, combat level, and total level update.
 - Mobile screenshot check at 393 x 852 with no visible overlap.
@@ -1113,7 +1203,7 @@ Successful solution: Implemented a React/Vite/TypeScript MVP with:
 - RAP spending and `+10,000 RAP` prototype button.
 - localStorage save/load.
 - Timestamp-based activity completion resolver for offline progress.
-- Progress screen with activity log and reset.
+- Superseded on 2026-06-30: the old Progress screen was replaced by the Codex module.
 
 Important implementation details:
 

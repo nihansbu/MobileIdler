@@ -3,9 +3,9 @@ import { AppShell } from './components/AppShell';
 import { AccountSetup } from './screens/AccountSetup';
 import { AccountScreen } from './screens/AccountScreen';
 import { ActivitiesScreen } from './screens/ActivitiesScreen';
-import { ProgressScreen } from './screens/ProgressScreen';
+import { CodexScreen } from './screens/CodexScreen';
 import { SkillsScreen } from './screens/SkillsScreen';
-import { createDefaultAccount, loadAccount, parseAccountBackup, resetAccount, saveAccount } from './game/save';
+import { createDefaultAccount, loadAccount, saveAccount } from './game/save';
 import { canUnlockSecondSlot, resolveCompletedActivities } from './game/simulation';
 import { getActivity } from './game/content';
 import { areRequirementsMet } from './game/requirements';
@@ -137,18 +137,6 @@ export function App() {
     updateAccount((current) => moveRosterSlot(current, fromIndex, toIndex));
   };
 
-  const hardReset = () => {
-    resetAccount();
-    setAccount(null);
-    setActiveView('account');
-  };
-
-  const importBackup = (rawBackup: string) => {
-    const importedAccount = resolveCompletedActivities(parseAccountBackup(rawBackup));
-    setAccount(importedAccount);
-    setActiveView('progress');
-  };
-
   return (
     <AppShell
       accountName={account.accountName}
@@ -177,7 +165,7 @@ export function App() {
       )}
       {activeView === 'activities' && <ActivitiesScreen account={account} activeCharacter={activeCharacter} onStartActivity={startActivity} />}
       {activeView === 'skills' && <SkillsScreen account={account} />}
-      {activeView === 'progress' && <ProgressScreen account={account} onImportBackup={importBackup} onReset={hardReset} />}
+      {activeView === 'codex' && <CodexScreen account={account} />}
     </AppShell>
   );
 }

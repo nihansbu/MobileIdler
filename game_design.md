@@ -671,6 +671,52 @@ Achievement examples:
 
 Achievements can unlock new content such as special dungeons, bosses, account bonuses, or quality-of-life upgrades.
 
+## Codex
+
+The Codex is the account's central long-term progress, collection, records, and achievement area. It replaces the old Progress bottom-navigation destination.
+
+Design direction:
+
+- The Codex is read-only from a gameplay perspective. It does not start activities or assign characters.
+- The Codex should feel satisfying to check often, because it summarizes account completion and collector progress.
+- The Codex is one of the game's main progression anchors alongside Skills.
+- The first structure uses four tabs: Overview, Collection, Records, and Achievements.
+- Overview is a compact account summary. It should not go deep into per-category detail.
+- Detail tabs provide the deeper breakdown for collection categories, record categories, and achievement categories.
+
+Codex Overview stat pairs:
+
+- Combat Level and Total Skill Level.
+- Skills at 99 and Skills at 120.
+- Total Quests and Quest Points.
+- Achievements and Achievement Points.
+- Unique Records and Records.
+- Collection count and Collection percentage.
+
+Pairing similar values on the same row is an intentional UI rule for this screen. For example, Total Quests sits beside Quest Points; Achievements sits beside Achievement Points; Unique Records sits beside Records.
+
+Current MVP data decisions:
+
+- Quests are not implemented yet, so Total Quests and Quest Points start at zero.
+- Achievements are structurally planned but not implemented yet, so completed achievements and achievement points start at zero.
+- The first Codex overview can expose planned totals to establish the long-term direction, such as starter achievement and collection totals.
+- Collection percentage should support decimals because long-term collection totals may reach hundreds or thousands of entries.
+- Collection items, mounts, pets, and skins are separate collection categories. Collector Items are their own high-volume category and should not be treated as normal inventory.
+- Records are aggregate account accomplishments, such as completed activities, region discoveries, unique explored regions, boss kills, dungeon runs, or future module counters.
+- Unique Records count distinct record lines with progress, while Records count aggregate total progress. For example, one boss killed 1,000 times would contribute one Unique Record and 1,000 Records.
+
+Initial Codex tests:
+
+- Bottom navigation shows Codex instead of Progress and opens the Codex screen.
+- Codex defaults to Overview.
+- Overview shows the stat pairs in the intended row order.
+- Combat Level, Total Skill Level, Skills at 99, and Skills at 120 are derived from account skill state.
+- Records update from current account activity and exploration progress.
+- Collection percentage displays with three decimals.
+- Collection, Records, and Achievements tabs are visible and switch without starting gameplay actions.
+- No Activity-start buttons appear in the Codex.
+- Existing top bar and bottom navigation collapse behavior still works.
+
 ## UI/UX Direction
 
 The UI should be simple, usable, and mobile-only.
@@ -833,9 +879,12 @@ Current MVP status:
 - Combat level requirements use the floored combat level, while display keeps two decimal places.
 - Activity tabs and activity rows remain visible when all characters are busy; Start buttons are disabled in that state.
 - Activities cost RAP, assign the character, and resolve from timestamps when complete.
-- Progress screen includes a manual JSON save export/import backup panel.
-- Progress screen shows region discovery progress and activity logs.
-- Inventory, items, dungeons, bossing, and achievements are not implemented yet.
+- Codex replaces the old Progress bottom-nav screen.
+- Codex currently includes Overview, Collection, Records, and Achievements tabs.
+- Codex Overview shows Combat Level, Total Skill Level, Skills at 99, Skills at 120, Total Quests, Quest Points, Achievements, Achievement Points, Unique Records, Records, Collection count, and Collection percentage.
+- Codex Records currently derive from completed activities, exploration discoveries, and explored regions.
+- Collection and Achievement totals are placeholder structure until save-backed collection and achievement state exists.
+- Inventory, items, quests, dungeons, bossing, and save-backed achievements are not implemented yet.
 
 Later:
 

@@ -34,7 +34,7 @@ export type SkillId =
 
 export type ActivityId = 'explore_old_road';
 
-export type ViewId = 'account' | 'activities' | 'skills' | 'progress';
+export type ViewId = 'account' | 'activities' | 'skills' | 'codex';
 
 export type CharacterStatus = 'idle' | 'busy';
 export type ActivityModule = 'explore';

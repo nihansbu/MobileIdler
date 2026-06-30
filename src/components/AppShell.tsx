@@ -26,7 +26,7 @@ const navItems: Array<{ id: ViewId; label: string; icon: keyof typeof Icons }> =
   { id: 'account', label: 'Account', icon: 'account' },
   { id: 'activities', label: 'Activities', icon: 'combat' },
   { id: 'skills', label: 'Skills', icon: 'activity' },
-  { id: 'progress', label: 'Progress', icon: 'bars' },
+  { id: 'codex', label: 'Codex', icon: 'codex' },
 ];
 
 export function AppShell({

@@ -1,6 +1,6 @@
 import {
   Activity,
-  BarChart3,
+  BookOpen,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -22,13 +22,13 @@ import {
 export const Icons = {
   activity: Activity,
   account: UserRound,
-  bars: BarChart3,
   chevronDown: ChevronDown,
   chevronLeft: ChevronLeft,
   chevronRight: ChevronRight,
   chevronUp: ChevronUp,
   check: CheckCircle2,
   characters: UsersRound,
+  codex: BookOpen,
   coins: Coins,
   combat: Swords,
   endurance: Dumbbell,

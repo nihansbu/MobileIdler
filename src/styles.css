@@ -648,6 +648,100 @@ button:disabled {
   background: var(--blue-strong);
 }
 
+.codex-title {
+  margin-bottom: 10px;
+}
+
+.codex-tabs {
+  grid-template-columns: repeat(4, 1fr);
+  margin: 12px 0 14px;
+}
+
+.codex-tabs button {
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 5px;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.codex-overview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.codex-stat-tile {
+  min-height: 74px;
+  padding: 10px;
+  display: grid;
+  align-content: space-between;
+  gap: 5px;
+}
+
+.codex-stat-tile span,
+.codex-stat-tile small,
+.codex-progress-row span,
+.codex-progress-row small,
+.codex-record-row span {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.codex-stat-tile strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 21px;
+  line-height: 1.05;
+}
+
+.codex-detail-section {
+  margin-top: 14px;
+}
+
+.codex-progress-row {
+  display: grid;
+  gap: 9px;
+}
+
+.codex-progress-row small {
+  font-size: 12px;
+  font-weight: 750;
+  text-align: right;
+}
+
+.codex-record-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.codex-record-row strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.codex-record-row div {
+  min-width: 52px;
+  display: grid;
+  gap: 2px;
+  justify-items: end;
+}
+
+.codex-record-row b {
+  color: var(--text);
+  font-size: 18px;
+}
+
 .activity-list {
   display: grid;
   gap: 10px;
