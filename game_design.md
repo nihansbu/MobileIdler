@@ -705,6 +705,7 @@ Current MVP data decisions:
 - Records are aggregate account accomplishments, such as completed activities, region discoveries, unique explored regions, boss kills, dungeon runs, or future module counters.
 - Unique Records count distinct record lines with progress, while Records count aggregate total progress. For example, one boss killed 1,000 times would contribute one Unique Record and 1,000 Records.
 - Records are unbounded statistics when the underlying activity can be repeated forever. The Overview `Records` tile should be a plain counter, not `current / total`. Bounded record values still use `current / total` where the current game content defines a real maximum, such as exploration discovery counters.
+- For Exploration Discoveries, `Unique` means fully completed discovery tracks. A partially progressed track, such as `Secrets 1 / 2`, contributes to `Total` but not to `Unique`.
 - Codex tiles should show both visual completion and explicit percentage text. The visual completion can be a subtle animated fill layer, but the percentage should still be readable as text.
 - Locked or uncompleted one-time entries should show no fill at 0% and full fill at 100% once completed.
 - Codex tabs should be switchable by tapping the segmented control and by swiping left or right across the Codex body on mobile.

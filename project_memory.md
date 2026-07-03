@@ -170,6 +170,7 @@ Implementation notes:
 - Record calculations must filter to current content definitions. Activity logs count only names matching current activities from `src/data/activities.ts`; region progress counts only current Explore activity IDs.
 - `Unique Records` is a bounded completion-style aggregate across current record lines. `Records` is an unbounded statistic counter across all current record totals and should be displayed as a plain number, not as `current / total`.
 - Individual record rows may mix bounded and unbounded totals. Activity completions are unbounded repeat counters; exploration discoveries and regions explored are bounded by current content definitions.
+- For `Exploration Discoveries`, `Unique` means fully completed discovery tracks, not tracks with any partial progress. Example: a `Secrets 1 / 2` track contributes to the total discovery value but not to the unique completed-track count.
 - The Account screen's region list also filters stale region progress so removed activity IDs cannot crash rendering.
 
 ## Universal Requirements And Rewards Architecture
@@ -665,6 +666,20 @@ Files involved:
 
 - `src/game/codex.ts`
 - `src/screens/CodexScreen.tsx`
+- `project_memory.md`
+- `game_design.md`
+
+### Exploration Unique Record Semantics
+
+Problem: `Exploration Discoveries` showed `Unique 5 / 5` while the total was only `18 / 19`, because any partially progressed discovery track counted as unique. That made `Unique` read like completion even when one track was still incomplete.
+
+Successful solution: Changed the exploration unique count to include only discovery tracks whose saved progress is at least the track maximum. Partial tracks still contribute to `Total`, but not to `Unique`.
+
+Example: with Old Road at Region Quests `8 / 8`, Treasures `3 / 3`, Points of Interest `5 / 5`, World Bosses `1 / 1`, and Secrets `1 / 2`, the Codex now shows `Exploration Discoveries Unique 4 / 5` and `Total 18 / 19`.
+
+Files involved:
+
+- `src/game/codex.ts`
 - `project_memory.md`
 - `game_design.md`
 

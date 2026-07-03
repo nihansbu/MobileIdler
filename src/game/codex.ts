@@ -94,13 +94,13 @@ const getExplorationDiscoveryRecord = (account: AccountSave): CodexRecordRow => 
   const currentExploreActivities = activities.filter((activity) => activity.module === 'explore');
   const uniqueTotal = currentExploreActivities.reduce((sum, activity) => sum + activity.discoveryTracks.length, 0);
   const valueTotal = currentExploreActivities.reduce((sum, activity) => sum + activity.discoveryTracks.reduce((trackSum, track) => trackSum + track.max, 0), 0);
-  const uniqueDiscoveryTracks = Object.entries(account.regionProgress).reduce((sum, [activityId, progress]) => {
+  const completedDiscoveryTracks = Object.entries(account.regionProgress).reduce((sum, [activityId, progress]) => {
     const activity = activities.find((candidate) => candidate.id === activityId);
     if (!activity) {
       return sum;
     }
 
-    return sum + activity.discoveryTracks.filter((track) => (progress.tracks[track.id] ?? 0) > 0).length;
+    return sum + activity.discoveryTracks.filter((track) => (progress.tracks[track.id] ?? 0) >= track.max).length;
   }, 0);
 
   const totalDiscoveries = Object.entries(account.regionProgress).reduce((sum, [activityId, progress]) => {
@@ -115,7 +115,7 @@ const getExplorationDiscoveryRecord = (account: AccountSave): CodexRecordRow => 
   return {
     id: 'exploration_discoveries',
     label: 'Exploration Discoveries',
-    unique: uniqueDiscoveryTracks,
+    unique: completedDiscoveryTracks,
     uniqueTotal,
     value: totalDiscoveries,
     valueTotal,
