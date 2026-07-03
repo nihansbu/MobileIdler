@@ -580,6 +580,10 @@ npm run build
 ```
 
 ```powershell
+npx playwright install chromium
+```
+
+```powershell
 gh auth status
 ```
 
@@ -628,6 +632,7 @@ Get-Content -Raw -LiteralPath 'assets\manifests\asset-manifest.json' | ConvertFr
 - Private repository work can still affect GitHub profile contribution visibility depending on account settings.
 - If names, races, classes, or references from existing franchises are used, remember that a GitHub Pages deployment may still be publicly reachable by link even when the repository is private. For a public-facing version, prefer original names or generic fantasy equivalents.
 - Save stability must be designed before large gameplay expansion starts.
+- If the in-app Browser runtime is unavailable, use local Playwright through the repo's own Node environment. The persistent JS runtime can resolve a different cached Playwright version and look for a mismatched browser binary.
 
 ## Successful Solutions
 
@@ -1372,6 +1377,53 @@ Files involved:
 - `image_pipeline.md`
 - `project_memory.md`
 - `game_design.md`
+
+### Minigame Activity Module, Collection Drops, And Codex Collection
+
+Problem: The game needed its first non-Explore activity module plus real collection-backed drops. The Codex Collection tab still used placeholder/empty data, and activities were still rendered as a flat tabbed body rather than a nested module flow.
+
+Successful solution: Added save schema v4 with account-wide `collections`, collection definitions for the first mount and pet, shared drop-table resolution, passive duration-based skill XP rewards, three minigame activity definitions, and a nested Activities body flow. The Activities screen now opens category cards first, then Explore or Minigames subpages, then detail views with requirements, RAP cost, duration, XP rewards, drop table, owned/missing state, and copies. The Codex Collection tab now reads real collection categories and entries from save state.
+
+Important implementation details:
+
+- `src/types.ts` defines `ActivityModule`, `CollectionCategory`, `CollectionSave`, `CompletionRewardDefinition`, and `DropDefinition`.
+- `src/game/save.ts` migrates schema v1/v2/v3 saves to schema v4 and normalizes collection state.
+- `src/game/skills.ts` has exact virtual-level helpers and the shared passive XP-rate helper.
+- `src/game/simulation.ts` applies completion rewards once when an activity completes, rolls drop tables, unlocks collection entries, and increments duplicate `copies`.
+- `src/game/drops.ts` owns drop chance formatting and collection-drop resolution.
+- `src/game/collections.ts` owns collection normalization and Codex progress helpers.
+- `src/data/activities.ts` contains `Herbalist's Crucible`, `Tidepool Trials`, and `Familiar Grove`.
+- `src/data/collections.ts` contains `Brinebound Turtle` and `Tidepool Otter`.
+- `src/screens/ActivitiesScreen.tsx` is now content-body navigation only. Top bar and bottom navigation remain protected shell surfaces.
+- `src/screens/CodexScreen.tsx` shows collection category progress and individual owned/missing entries.
+
+Commands used:
+
+```powershell
+npm run build
+```
+
+```powershell
+npm run dev -- --port 5182
+```
+
+```powershell
+npx playwright install chromium
+```
+
+Local QA covered:
+
+- Mobile viewport `393 x 852`.
+- Activities landing shows module cards.
+- Minigames subpage shows `Herbalist's Crucible`, `Tidepool Trials`, and `Familiar Grove`.
+- `Herbalist's Crucible` is available at Herblore 1 and displays `+500 Herblore XP` plus `+100 Crafting XP`.
+- `Tidepool Trials` is locked at Fishing 1 with `Requires Fishing 30`.
+- A seeded completed `Tidepool Trials` run resolves offline and unlocks `Brinebound Turtle` through its 1/1 test drop.
+- Codex Collection shows real Mounts and Pets totals, and the Brinebound Turtle entry appears as owned.
+- A duplicate Brinebound Turtle drop increments `Copies 1`.
+- No relevant console errors were reported in the local Playwright run.
+
+Browser/runtime note: The in-app Browser runtime returned `Browser is not available: iab`. The persistent JS runtime also resolved a cached Playwright/browser mismatch. The reliable fallback was to run Playwright through the repo's own `node --input-type=module` process from the workspace.
 
 ## Failed Approaches
 

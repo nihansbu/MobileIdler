@@ -1,6 +1,7 @@
 import { getActivity } from './content';
-import { addSkillXp } from './skills';
-import type { AccountSave, ActivityId, ActivityLogEntry, CharacterSave, RegionProgressSave, RewardDefinition } from '../types';
+import { rollDropTable } from './drops';
+import { addSkillXp, getPassiveSkillXpForDuration, getSkill } from './skills';
+import type { AccountSave, ActivityId, ActivityLogEntry, CharacterSave, CompletionRewardDefinition, RegionProgressSave, RewardDefinition } from '../types';
 
 const ACTIVITY_LOG_LIMIT = 30;
 
@@ -32,6 +33,26 @@ const applyReward = (account: AccountSave, reward: RewardDefinition): AccountSav
   }
 
   return account;
+};
+
+const applyCompletionReward = (
+  account: AccountSave,
+  reward: CompletionRewardDefinition,
+  durationMinutes: number,
+): { account: AccountSave; label: string | null } => {
+  if (reward.type === 'skillXp') {
+    return {
+      account: addSkillXp(account, reward.skillId, reward.amount),
+      label: `+${reward.amount.toLocaleString()} ${getSkill(reward.skillId).name} XP`,
+    };
+  }
+
+  const amount = getPassiveSkillXpForDuration(account, reward.skillId, durationMinutes, reward.multiplier);
+
+  return {
+    account: addSkillXp(account, reward.skillId, amount),
+    label: `+${amount.toLocaleString()} ${getSkill(reward.skillId).name} XP`,
+  };
 };
 
 const resolveExploreTick = (account: AccountSave, activityId: string, characterName: string, now: number): { account: AccountSave; logEntries: ActivityLogEntry[] } => {
@@ -106,19 +127,44 @@ const resolveCharacterActivity = (
   const logEntries: ActivityLogEntry[] = [];
 
   for (let index = 0; index < ticksToResolve; index += 1) {
-    const resolved = resolveExploreTick(nextAccount, activity.id, character.name, now);
-    nextAccount = resolved.account;
-    logEntries.push(...resolved.logEntries);
+    if (activity.module === 'explore') {
+      const resolved = resolveExploreTick(nextAccount, activity.id, character.name, now);
+      nextAccount = resolved.account;
+      logEntries.push(...resolved.logEntries);
+    }
   }
 
   const completed = character.activity.endsAt <= now;
   if (completed) {
+    const completionLabels: string[] = [];
+
+    for (const reward of activity.completionRewards) {
+      const rewarded = applyCompletionReward(nextAccount, reward, activity.durationMinutes);
+      nextAccount = rewarded.account;
+      if (rewarded.label) {
+        completionLabels.push(rewarded.label);
+      }
+    }
+
+    if (activity.dropTable.length > 0) {
+      const dropped = rollDropTable(nextAccount, activity.dropTable, now, activity.name);
+      nextAccount = dropped.account;
+      completionLabels.push(
+        ...dropped.drops.map((dropResult) =>
+          dropResult.isNew
+            ? `Unlocked ${dropResult.collectionName}`
+            : `Duplicate ${dropResult.collectionName} copy ${dropResult.copies}`,
+        ),
+      );
+    }
+
+    const suffix = completionLabels.length > 0 ? completionLabels.join(', ') : `${boundedTargetTicks} ticks resolved`;
     logEntries.unshift({
       id: crypto.randomUUID(),
       at: now,
       characterName: character.name,
       activityName: activity.name,
-      result: `${activity.completionRewardLabel}. ${boundedTargetTicks} ticks resolved.`,
+      result: `${activity.completionRewardLabel}. ${suffix}.`,
     });
   }
 

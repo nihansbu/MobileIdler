@@ -29,6 +29,7 @@ const navItems: Array<{ id: ViewId; label: string; icon: keyof typeof Icons }> =
   { id: 'codex', label: 'Codex', icon: 'codex' },
 ];
 
+// Protected app shell: do not redesign top bar or bottom navigation unless the user explicitly requests shell changes.
 export function AppShell({
   accountName,
   rap,

@@ -35,11 +35,39 @@ export const getSkillLevelFromXp = (xp: number) => {
   return 1;
 };
 
+export const getExactSkillLevelFromXp = (xp: number) => {
+  const boundedXp = Math.max(0, Math.min(MAX_SKILL_XP, Math.floor(xp)));
+  const level = getSkillLevelFromXp(boundedXp);
+
+  if (level >= MAX_SKILL_LEVEL) {
+    return MAX_SKILL_LEVEL;
+  }
+
+  const currentLevelXp = xpForLevel(level);
+  const nextLevelXp = xpForLevel(level + 1);
+  const levelSpan = Math.max(1, nextLevelXp - currentLevelXp);
+  const levelProgress = Math.max(0, Math.min(1, (boundedXp - currentLevelXp) / levelSpan));
+
+  return level + levelProgress;
+};
+
 export const getNextLevelXp = (level: number) => (level >= MAX_SKILL_LEVEL ? MAX_SKILL_XP : xpForLevel(level + 1));
 
 export const getSkillXp = (account: AccountSave, skillId: SkillId) => account.skillXp[skillId] ?? 0;
 
 export const getSkillLevel = (account: AccountSave, skillId: SkillId) => getSkillLevelFromXp(getSkillXp(account, skillId));
+
+export const getExactSkillLevel = (account: AccountSave, skillId: SkillId) => getExactSkillLevelFromXp(getSkillXp(account, skillId));
+
+export const getPassiveSkillXpPerHour = (account: AccountSave, skillId: SkillId) => {
+  const exactLevel = getExactSkillLevel(account, skillId);
+  const levelProgress = Math.max(0, Math.min(1, (exactLevel - 1) / (MAX_SKILL_LEVEL - 1)));
+
+  return Math.round(500 + 119_500 * Math.pow(levelProgress, 2));
+};
+
+export const getPassiveSkillXpForDuration = (account: AccountSave, skillId: SkillId, durationMinutes: number, multiplier = 1) =>
+  Math.max(1, Math.round(getPassiveSkillXpPerHour(account, skillId) * (durationMinutes / 60) * multiplier));
 
 export const getTotalLevel = (account: AccountSave) =>
   skills.reduce((total, skill) => total + getSkillLevel(account, skill.id), 0);

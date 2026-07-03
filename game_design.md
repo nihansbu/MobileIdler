@@ -956,27 +956,40 @@ Current MVP status:
 - Old Road repeat rewards grant Hunter, Agility, and Constitution XP per tick.
 - Skills screen shows account-wide skills, total level, combat level, XP progress, and locked skills.
 - Combat level requirements use the floored combat level, while display keeps two decimal places.
-- Activity tabs and activity rows remain visible when all characters are busy; Start buttons are disabled in that state.
+- The Activities screen is now a nested content-body flow: category landing page, module subpage, then activity detail view.
+- Current Activity categories shown in the body are Explore, Minigames, Combat, Dungeons, and Bossing.
+- Combat, Dungeons, and Bossing are visible as planned modules but cannot be opened for real gameplay yet.
+- Activity and minigame rows remain visible when all characters are busy; Start buttons are disabled in that state.
 - Activities cost RAP, assign the character, and resolve from timestamps when complete.
+- Minigames are implemented as timed character activities using the shared requirement and reward model.
+- Current minigames are `Herbalist's Crucible`, `Tidepool Trials`, and `Familiar Grove`.
+- `Herbalist's Crucible` is available at Herblore 1 and grants passive Herblore XP plus 20% Crafting XP.
+- `Tidepool Trials` requires Fishing 30, grants passive Fishing XP, and can drop the first test mount and pet.
+- `Familiar Grove` requires Summoning 10 and grants passive Summoning XP.
+- Passive minigame XP uses the shared exact virtual-level curve so XP per hour rises smoothly through each level.
+- Collection save state exists for Collector Items, Mounts, Pets, and Skins.
+- First collection entries are `Brinebound Turtle` as a mount and `Tidepool Otter` as a pet.
+- The first time a collection drop is found, it unlocks the entry. Duplicate drops increment `copies`.
 - Codex replaces the old Progress bottom-nav screen.
 - Codex currently includes Overview, Collection, Records, and Achievements tabs.
 - Codex Overview shows Combat Level, Total Skill Level, Skills at 99, Skills at 120, Total Quests, Quest Points, Achievements, Achievement Points, Unique Records, Records, Collection count, and Collection percentage.
 - Codex Records currently derive from completed activities, exploration discoveries, and explored regions.
-- Collection and Achievement tabs intentionally show empty states until save-backed collection and achievement content exists.
+- Codex Collection now uses real save-backed collection totals and shows collection entries as owned or missing.
+- Achievement tabs intentionally show empty states until save-backed achievement content exists.
 - Inventory, items, quests, dungeons, bossing, and save-backed achievements are not implemented yet.
 
 Next implementation plan:
 
-1. Protect the app shell in code comments or component documentation so future body redesigns do not accidentally alter the top bar or bottom navigation.
-2. Extend core types for activity modules, minigames, drop tables, and collection entries.
-3. Add account-wide collection save state for mounts, pets, skins, and collector items with ownership and copies.
-4. Add a shared drop-table resolver that can unlock collection entries and increment copies on duplicates.
-5. Add exact virtual-level helper and shared passive XP-rate helper.
-6. Add minigame content definitions for `Herbalist's Crucible`, `Tidepool Trials`, and `Familiar Grove`.
-7. Rework the Activities content body into a category landing page plus module subpages, without changing the top bar or bottom navigation.
-8. Add Minigames list and minigame detail/start views with requirements, RAP cost, duration, XP rewards, drop table, owned/missing status, and copies.
-9. Feed real collection totals and owned counts into Codex Collection once collection content exists.
-10. Test with Herblore 1 minigame unlocked, Fishing 30 minigame locked, first mount 1/1 drop, pet 1/500 drop, duplicate copies, Codex updates, offline completion, and stale-content filtering.
+1. Add clearer activity completion feedback so rare drops and XP rewards are visible immediately after returning to the app.
+2. Add a small Activity Log or recent results view inside the content body.
+3. Add first Achievement definitions and wire them into Codex Achievements.
+4. Add achievement triggers for first mount, first pet, first minigame completion, and Old Road completion.
+5. Add more collection entries so Mounts, Pets, Skins, and Collector Items all have real examples.
+6. Add a first Bossing module slice with one boss, kill counter, visible loot table, and a rare collection drop.
+7. Add a simple Quest/Quest Points data model before using quest requirements broadly.
+8. Add better Activity body navigation affordances if the nested flow starts feeling too deep on mobile.
+9. Add save export/import to a future Settings location so long-term localStorage progress has a manual backup path.
+10. Add automated tests around save migrations, passive XP rewards, drop copies, and Codex summary calculations.
 
 Later:
 

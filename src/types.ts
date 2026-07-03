@@ -32,12 +32,13 @@ export type SkillId =
   | 'archaeology'
   | 'sailing';
 
-export type ActivityId = 'explore_old_road';
+export type ActivityId = 'explore_old_road' | 'minigame_herbalists_crucible' | 'minigame_tidepool_trials' | 'minigame_familiar_grove';
 
 export type ViewId = 'account' | 'activities' | 'skills' | 'codex';
 
 export type CharacterStatus = 'idle' | 'busy';
-export type ActivityModule = 'explore';
+export type ActivityModule = 'explore' | 'minigame';
+export type CollectionCategory = 'collectorItems' | 'mounts' | 'pets' | 'skins';
 
 export interface PassiveDefinition {
   id: string;
@@ -84,6 +85,40 @@ export type RewardDefinition = {
   amount: number;
 };
 
+export type CompletionRewardDefinition =
+  | RewardDefinition
+  | {
+      type: 'passiveSkillXp';
+      skillId: SkillId;
+      multiplier: number;
+    };
+
+export interface CollectionEntryDefinition {
+  id: string;
+  category: CollectionCategory;
+  name: string;
+  description: string;
+  source: string;
+}
+
+export interface CollectionEntrySave {
+  owned: boolean;
+  copies: number;
+  firstObtainedAt?: number;
+  firstSource?: string;
+}
+
+export type CollectionSave = Record<CollectionCategory, Record<string, CollectionEntrySave>>;
+
+export interface DropDefinition {
+  id: string;
+  label: string;
+  collectionCategory: CollectionCategory;
+  collectionId: string;
+  chanceNumerator: number;
+  chanceDenominator: number;
+}
+
 export interface DiscoveryTrackDefinition {
   id: string;
   label: string;
@@ -95,13 +130,15 @@ export interface ActivityDefinition {
   id: ActivityId;
   module: ActivityModule;
   name: string;
-  regionName: string;
+  regionName?: string;
   durationMinutes: number;
   rapCost: number;
   tickIntervalSeconds: number;
   description: string;
   requirements: RequirementDefinition[];
   repeatRewards: RewardDefinition[];
+  completionRewards: CompletionRewardDefinition[];
+  dropTable: DropDefinition[];
   discoveryTracks: DiscoveryTrackDefinition[];
   completionRewardLabel: string;
 }
@@ -136,7 +173,7 @@ export interface ActivityLogEntry {
 }
 
 export interface AccountSave {
-  schemaVersion: 3;
+  schemaVersion: 4;
   accountName: string;
   rap: number;
   characterSlots: number;
@@ -148,6 +185,7 @@ export interface AccountSave {
   skillXp: Record<SkillId, number>;
   unlockedSkillIds: SkillId[];
   regionProgress: Record<string, RegionProgressSave>;
+  collections: CollectionSave;
   activityLog: ActivityLogEntry[];
   updatedAt: number;
 }

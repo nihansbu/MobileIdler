@@ -1,6 +1,7 @@
 import { activities } from '../data/activities';
 import { skills } from '../data/skills';
 import type { AccountSave } from '../types';
+import { getCollectionCategoryProgress, getCollectionEntryProgress } from './collections';
 import { getCombatLevel, getSkillLevel, getTotalLevel } from './skills';
 
 export interface CodexOverviewStat {
@@ -33,6 +34,7 @@ export interface CodexRecordRow {
 export interface CodexSummary {
   overviewStats: CodexOverviewStat[];
   collectionCategories: CodexCategoryProgress[];
+  collectionEntries: ReturnType<typeof getCollectionEntryProgress>;
   recordRows: CodexRecordRow[];
   achievementCategories: CodexCategoryProgress[];
 }
@@ -45,7 +47,6 @@ const questTotals = {
 const combatLevelTotal = 138;
 
 const achievementCategories: CodexCategoryProgress[] = [];
-const collectionCategories: CodexCategoryProgress[] = [];
 
 const formatRatio = (current: number, total: number) => `${current.toLocaleString()} / ${total.toLocaleString()}`;
 
@@ -74,16 +75,22 @@ const currentActivityNames = new Set(activities.map((activity) => activity.name)
 
 const getCurrentActivityLogs = (account: AccountSave) => account.activityLog.filter((entry) => currentActivityNames.has(entry.activityName));
 
+const getCurrentActivityCompletionLogs = (account: AccountSave) =>
+  getCurrentActivityLogs(account).filter((entry) => {
+    const activity = activities.find((candidate) => candidate.name === entry.activityName);
+    return activity ? entry.result.startsWith(activity.completionRewardLabel) : false;
+  });
+
 const getActivityCompletionRecord = (account: AccountSave): CodexRecordRow => {
-  const validActivityLogs = getCurrentActivityLogs(account);
-  const uniqueCompletedActivities = new Set(validActivityLogs.map((entry) => entry.activityName)).size;
+  const validCompletionLogs = getCurrentActivityCompletionLogs(account);
+  const uniqueCompletedActivities = new Set(validCompletionLogs.map((entry) => entry.activityName)).size;
 
   return {
     id: 'activity_completions',
     label: 'Activity Completions',
     unique: uniqueCompletedActivities,
     uniqueTotal: activities.length,
-    value: validActivityLogs.length,
+    value: validCompletionLogs.length,
     valueTotal: null,
     percent: null,
     percentLabel: null,
@@ -157,6 +164,8 @@ export const getCodexSummary = (account: AccountSave): CodexSummary => {
   const totalSkillLevel = getTotalLevel(account);
   const skillsAt99 = skills.filter((skill) => getSkillLevel(account, skill.id) >= 99).length;
   const skillsAt120 = skills.filter((skill) => getSkillLevel(account, skill.id) >= 120).length;
+  const collectionCategories = getCollectionCategoryProgress(account);
+  const collectionEntries = getCollectionEntryProgress(account);
   const collectionCurrent = getProgressCurrent(collectionCategories);
   const collectionTotal = getProgressTotal(collectionCategories);
   const completedAchievements = getProgressCurrent(achievementCategories);
@@ -196,6 +205,7 @@ export const getCodexSummary = (account: AccountSave): CodexSummary => {
       createOverviewStat('Collection %', `${collectionPercent.toFixed(3)}%`, collectionCurrent, collectionTotal > 0 ? collectionTotal : null),
     ],
     collectionCategories,
+    collectionEntries,
     recordRows,
     achievementCategories,
   };

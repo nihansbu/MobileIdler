@@ -833,9 +833,73 @@ button:disabled {
   gap: 10px;
 }
 
+.activity-category-grid {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.activity-category-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.activity-category-card div:nth-child(2) {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.activity-category-card strong,
+.collection-entry-row strong,
+.drop-row b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-category-card span,
+.activity-category-card small,
+.collection-entry-row span,
+.drop-row span {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-category-card small {
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.disabled-category {
+  opacity: 0.72;
+}
+
+.subpage-header {
+  margin-bottom: 12px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.subpage-header h2 {
+  margin: 0;
+}
+
 .activity-card {
   display: grid;
   gap: 13px;
+}
+
+.activity-list-card {
+  cursor: default;
 }
 
 .activity-card-head {
@@ -868,6 +932,25 @@ button:disabled {
 .activity-body p {
   margin: 0;
   font-size: 14px;
+}
+
+.activity-detail {
+  margin-top: 0;
+}
+
+.detail-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.compact-detail-box {
+  margin-top: 0;
+  padding: 8px 10px;
+}
+
+.compact-detail-box span {
+  display: block;
+  color: var(--muted);
 }
 
 .meta-grid {
@@ -913,6 +996,52 @@ button:disabled {
   border-radius: 999px;
   padding: 5px 8px;
   font-size: 12px;
+}
+
+.drop-table,
+.collection-entry-list {
+  display: grid;
+  gap: 8px;
+}
+
+.drop-table > strong {
+  font-size: 16px;
+}
+
+.drop-row,
+.collection-entry-row {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.drop-row > div,
+.collection-entry-row > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.drop-row > div:last-child,
+.collection-entry-row > div:last-child {
+  justify-items: end;
+  text-align: right;
+}
+
+.drop-row.owned,
+.collection-entry-row.owned {
+  border-color: rgba(139, 214, 183, 0.45);
+  background: rgba(139, 214, 183, 0.08);
+}
+
+.drop-row.missing,
+.collection-entry-row.missing {
+  opacity: 0.78;
 }
 
 .skill-summary {

@@ -1,4 +1,6 @@
 import { skills } from '../data/skills';
+import { activities } from '../data/activities';
+import { createInitialCollections, normalizeCollections } from './collections';
 import { MAX_CHARACTER_SLOTS, normalizeRosterSlots } from './roster';
 import type { AccountSave, CharacterSave, SkillId } from '../types';
 
@@ -22,6 +24,10 @@ type LegacyV2AccountSave = Omit<AccountSave, 'schemaVersion' | 'activeCharacterI
   schemaVersion: 2;
 };
 
+type LegacyV3AccountSave = Omit<AccountSave, 'schemaVersion' | 'collections'> & {
+  schemaVersion: 3;
+};
+
 export const createInitialSkillXp = (): Record<SkillId, number> =>
   skills.reduce(
     (accumulator, skill) => ({
@@ -40,18 +46,24 @@ const normalizeSkillXp = (skillXp: Partial<Record<string, number>> | null | unde
     {} as Record<SkillId, number>,
   );
 
-const normalizeCharacter = (character: LegacyCharacterSave): CharacterSave => ({
-  id: character.id,
-  name: character.name,
-  raceId: character.raceId,
-  classId: character.classId,
-  activity: character.activity?.activityId === 'explore_old_road'
+const isCurrentActivityId = (activityId: string) => activities.some((activity) => activity.id === activityId);
+
+const normalizeCharacter = (character: LegacyCharacterSave): CharacterSave => {
+  const activity = character.activity && isCurrentActivityId(character.activity.activityId)
     ? {
         ...character.activity,
         resolvedTicks: character.activity.resolvedTicks ?? 0,
       }
-    : null,
-});
+    : null;
+
+  return {
+    id: character.id,
+    name: character.name,
+    raceId: character.raceId,
+    classId: character.classId,
+    activity,
+  };
+};
 
 const normalizeAccount = (account: AccountSave): AccountSave => {
   const characters = account.characters.map(normalizeCharacter);
@@ -70,20 +82,29 @@ const normalizeAccount = (account: AccountSave): AccountSave => {
     skillXp: normalizeSkillXp(account.skillXp),
     unlockedSkillIds: (account.unlockedSkillIds ?? []).filter((skillId) => skills.some((skill) => skill.id === skillId)),
     regionProgress: account.regionProgress ?? {},
+    collections: normalizeCollections(account.collections),
     updatedAt: Date.now(),
   };
 };
 
-const migrateV2ToV3 = (account: LegacyV2AccountSave): AccountSave =>
+const migrateV3ToV4 = (account: LegacyV3AccountSave): AccountSave =>
   normalizeAccount({
     ...account,
-    schemaVersion: 3,
-    activeCharacterId: account.characters[0]?.id ?? null,
-    rosterSlots: normalizeRosterSlots(account.characters, account.characters.map((character) => character.id), account.characterSlots),
+    schemaVersion: 4,
+    collections: createInitialCollections(),
   });
 
-const migrateV1ToV3 = (account: LegacyAccountSave): AccountSave =>
-  migrateV2ToV3({
+const migrateV2ToV4 = (account: LegacyV2AccountSave): AccountSave =>
+  normalizeAccount({
+    ...account,
+    schemaVersion: 4,
+    activeCharacterId: account.characters[0]?.id ?? null,
+    rosterSlots: normalizeRosterSlots(account.characters, account.characters.map((character) => character.id), account.characterSlots),
+    collections: createInitialCollections(),
+  });
+
+const migrateV1ToV4 = (account: LegacyAccountSave): AccountSave =>
+  migrateV2ToV4({
     schemaVersion: 2,
     accountName: account.accountName,
     rap: account.rap,
@@ -94,12 +115,13 @@ const migrateV1ToV3 = (account: LegacyAccountSave): AccountSave =>
     skillXp: createInitialSkillXp(),
     unlockedSkillIds: [],
     regionProgress: {},
+    collections: createInitialCollections(),
     activityLog: account.activityLog,
     updatedAt: Date.now(),
   });
 
 export const createDefaultAccount = (accountName = 'LuckyBoo'): AccountSave => ({
-  schemaVersion: 3,
+  schemaVersion: 4,
   accountName,
   rap: 0,
   characterSlots: 1,
@@ -111,6 +133,7 @@ export const createDefaultAccount = (accountName = 'LuckyBoo'): AccountSave => (
   skillXp: createInitialSkillXp(),
   unlockedSkillIds: [],
   regionProgress: {},
+  collections: createInitialCollections(),
   activityLog: [],
   updatedAt: Date.now(),
 });
@@ -141,7 +164,7 @@ const isAccountSave = (value: unknown): value is AccountSave => {
 
   const candidate = value as AccountSave;
   return (
-    candidate.schemaVersion === 3 &&
+    candidate.schemaVersion === 4 &&
     typeof candidate.accountName === 'string' &&
     typeof candidate.rap === 'number' &&
     typeof candidate.characterSlots === 'number' &&
@@ -155,6 +178,8 @@ const isAccountSave = (value: unknown): value is AccountSave => {
     Array.isArray(candidate.unlockedSkillIds) &&
     candidate.regionProgress !== null &&
     typeof candidate.regionProgress === 'object' &&
+    candidate.collections !== null &&
+    typeof candidate.collections === 'object' &&
     Array.isArray(candidate.activityLog) &&
     typeof candidate.updatedAt === 'number'
   );
@@ -184,17 +209,47 @@ const isV2AccountSave = (value: unknown): value is LegacyV2AccountSave => {
   );
 };
 
+const isV3AccountSave = (value: unknown): value is LegacyV3AccountSave => {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const candidate = value as LegacyV3AccountSave;
+  return (
+    candidate.schemaVersion === 3 &&
+    typeof candidate.accountName === 'string' &&
+    typeof candidate.rap === 'number' &&
+    typeof candidate.characterSlots === 'number' &&
+    Array.isArray(candidate.characters) &&
+    (typeof candidate.activeCharacterId === 'string' || candidate.activeCharacterId === null) &&
+    Array.isArray(candidate.rosterSlots) &&
+    typeof candidate.completedActivities === 'number' &&
+    Array.isArray(candidate.unlockedRaceClassCombos) &&
+    candidate.skillXp !== null &&
+    typeof candidate.skillXp === 'object' &&
+    Array.isArray(candidate.unlockedSkillIds) &&
+    candidate.regionProgress !== null &&
+    typeof candidate.regionProgress === 'object' &&
+    Array.isArray(candidate.activityLog) &&
+    typeof candidate.updatedAt === 'number'
+  );
+};
+
 const parseUnknownSave = (value: unknown): AccountSave | null => {
   if (isAccountSave(value)) {
     return normalizeAccount(value);
   }
 
   if (isLegacyAccountSave(value)) {
-    return migrateV1ToV3(value);
+    return migrateV1ToV4(value);
   }
 
   if (isV2AccountSave(value)) {
-    return migrateV2ToV3(value);
+    return migrateV2ToV4(value);
+  }
+
+  if (isV3AccountSave(value)) {
+    return migrateV3ToV4(value);
   }
 
   return null;

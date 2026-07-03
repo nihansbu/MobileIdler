@@ -116,6 +116,22 @@ export function CodexScreen({ account }: CodexScreenProps) {
                   <small>{getCodexPercentLabel(category.current, category.total)}</small>
                 </Panel>
               ))}
+              {summary.collectionEntries.length > 0 && (
+                <div className="collection-entry-list">
+                  {summary.collectionEntries.map((entry) => (
+                    <Panel key={`${entry.category}:${entry.id}`} className={`collection-entry-row ${entry.save.owned ? 'owned' : 'missing'}`}>
+                      <div>
+                        <strong>{entry.name}</strong>
+                        <span>{entry.source}</span>
+                      </div>
+                      <div>
+                        <b>{entry.save.owned ? 'Owned' : 'Missing'}</b>
+                        <span>Copies {entry.save.copies.toLocaleString()}</span>
+                      </div>
+                    </Panel>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </section>
