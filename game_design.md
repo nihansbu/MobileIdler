@@ -699,11 +699,12 @@ Current MVP data decisions:
 
 - Quests are not implemented yet, so Total Quests and Quest Points start at zero.
 - Achievements are structurally planned but not implemented yet, so completed achievements and achievement points start at zero.
-- The first Codex overview can expose planned totals to establish the long-term direction, such as starter achievement and collection totals.
+- The Codex must not expose fake planned totals as if they were implemented content. Collection and achievement detail tabs should stay empty until those systems have real content definitions and save-backed ownership/completion state.
 - Collection percentage should support decimals because long-term collection totals may reach hundreds or thousands of entries.
 - Collection items, mounts, pets, and skins are separate collection categories. Collector Items are their own high-volume category and should not be treated as normal inventory.
 - Records are aggregate account accomplishments, such as completed activities, region discoveries, unique explored regions, boss kills, dungeon runs, or future module counters.
 - Unique Records count distinct record lines with progress, while Records count aggregate total progress. For example, one boss killed 1,000 times would contribute one Unique Record and 1,000 Records.
+- Records are unbounded statistics when the underlying activity can be repeated forever. The Overview `Records` tile should be a plain counter, not `current / total`. Bounded record values still use `current / total` where the current game content defines a real maximum, such as exploration discovery counters.
 - Codex tiles should show both visual completion and explicit percentage text. The visual completion can be a subtle animated fill layer, but the percentage should still be readable as text.
 - Locked or uncompleted one-time entries should show no fill at 0% and full fill at 100% once completed.
 - Codex tabs should be switchable by tapping the segmented control and by swiping left or right across the Codex body on mobile.
@@ -890,7 +891,7 @@ Current MVP status:
 - Codex currently includes Overview, Collection, Records, and Achievements tabs.
 - Codex Overview shows Combat Level, Total Skill Level, Skills at 99, Skills at 120, Total Quests, Quest Points, Achievements, Achievement Points, Unique Records, Records, Collection count, and Collection percentage.
 - Codex Records currently derive from completed activities, exploration discoveries, and explored regions.
-- Collection and Achievement totals are placeholder structure until save-backed collection and achievement state exists.
+- Collection and Achievement tabs intentionally show empty states until save-backed collection and achievement content exists.
 - Inventory, items, quests, dungeons, bossing, and save-backed achievements are not implemented yet.
 
 Later:

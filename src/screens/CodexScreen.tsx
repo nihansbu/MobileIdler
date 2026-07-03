@@ -22,9 +22,9 @@ export function CodexScreen({ account }: CodexScreenProps) {
   const summary = getCodexSummary(account);
   const activeTabIndex = codexTabs.findIndex((tab) => tab.id === activeTab);
 
-  const getFillStyle = (percent: number) => ({ '--fill': `${percent}%` }) as CSSProperties;
-  const getFilledClassName = (baseClassName: string, percent: number) =>
-    `${baseClassName} filled-card${percent <= 0 ? ' empty-fill' : ''}`.trim();
+  const getFillStyle = (percent: number | null) => ({ '--fill': `${percent ?? 0}%` }) as CSSProperties;
+  const getFilledClassName = (baseClassName: string, percent: number | null) =>
+    `${baseClassName} filled-card${!percent || percent <= 0 ? ' empty-fill' : ''}`.trim();
 
   const selectAdjacentTab = (direction: -1 | 1) => {
     const nextIndex = Math.max(0, Math.min(codexTabs.length - 1, activeTabIndex + direction));
@@ -82,7 +82,7 @@ export function CodexScreen({ account }: CodexScreenProps) {
             <Panel key={stat.label} className={getFilledClassName('codex-stat-tile', stat.percent)} style={getFillStyle(stat.percent)}>
               <span>{stat.label}</span>
               <strong>{stat.value}</strong>
-              <small>{stat.percentLabel}</small>
+              {stat.percentLabel && <small>{stat.percentLabel}</small>}
             </Panel>
           ))}
         </section>
@@ -91,26 +91,33 @@ export function CodexScreen({ account }: CodexScreenProps) {
       {activeTab === 'collection' && (
         <section className="section codex-detail-section">
           <h2>Collection</h2>
-          <div className="stack">
-            {summary.collectionCategories.map((category) => (
-              <Panel
-                key={category.id}
-                className={getFilledClassName('codex-progress-row', getCodexPercent(category.current, category.total))}
-                style={getFillStyle(getCodexPercent(category.current, category.total))}
-              >
-                <div className="progress-label">
-                  <span>{category.label}</span>
-                  <strong>
-                    {category.current.toLocaleString()} / {category.total.toLocaleString()}
-                  </strong>
-                </div>
-                <div className="progress-track">
-                  <div className="progress-fill" style={{ width: `${getCodexPercent(category.current, category.total)}%` }} />
-                </div>
-                <small>{getCodexPercentLabel(category.current, category.total)}</small>
-              </Panel>
-            ))}
-          </div>
+          {summary.collectionCategories.length === 0 ? (
+            <Panel className="empty-state">
+              <strong>No collection content yet</strong>
+              <span>Collector items, mounts, pets, and skins will appear here once those systems exist.</span>
+            </Panel>
+          ) : (
+            <div className="stack">
+              {summary.collectionCategories.map((category) => (
+                <Panel
+                  key={category.id}
+                  className={getFilledClassName('codex-progress-row', getCodexPercent(category.current, category.total))}
+                  style={getFillStyle(getCodexPercent(category.current, category.total))}
+                >
+                  <div className="progress-label">
+                    <span>{category.label}</span>
+                    <strong>
+                      {category.current.toLocaleString()} / {category.total.toLocaleString()}
+                    </strong>
+                  </div>
+                  <div className="progress-track">
+                    <div className="progress-fill" style={{ width: `${getCodexPercent(category.current, category.total)}%` }} />
+                  </div>
+                  <small>{getCodexPercentLabel(category.current, category.total)}</small>
+                </Panel>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
@@ -129,11 +136,9 @@ export function CodexScreen({ account }: CodexScreenProps) {
                 </div>
                 <div>
                   <span>Total</span>
-                  <b>
-                    {record.value.toLocaleString()} / {record.valueTotal.toLocaleString()}
-                  </b>
+                  <b>{record.valueTotal === null ? record.value.toLocaleString() : `${record.value.toLocaleString()} / ${record.valueTotal.toLocaleString()}`}</b>
                 </div>
-                <small>{record.percentLabel}</small>
+                {record.percentLabel && <small>{record.percentLabel}</small>}
               </Panel>
             ))}
           </div>
@@ -143,26 +148,33 @@ export function CodexScreen({ account }: CodexScreenProps) {
       {activeTab === 'achievements' && (
         <section className="section codex-detail-section">
           <h2>Achievements</h2>
-          <div className="stack">
-            {summary.achievementCategories.map((category) => (
-              <Panel
-                key={category.id}
-                className={getFilledClassName('codex-progress-row', getCodexPercent(category.current, category.total))}
-                style={getFillStyle(getCodexPercent(category.current, category.total))}
-              >
-                <div className="progress-label">
-                  <span>{category.label}</span>
-                  <strong>
-                    {category.current.toLocaleString()} / {category.total.toLocaleString()}
-                  </strong>
-                </div>
-                <div className="progress-track">
-                  <div className="progress-fill" style={{ width: `${getCodexPercent(category.current, category.total)}%` }} />
-                </div>
-                <small>{getCodexPercentLabel(category.current, category.total)}</small>
-              </Panel>
-            ))}
-          </div>
+          {summary.achievementCategories.length === 0 ? (
+            <Panel className="empty-state">
+              <strong>No achievements yet</strong>
+              <span>Achievement categories and points will appear here once the achievement system exists.</span>
+            </Panel>
+          ) : (
+            <div className="stack">
+              {summary.achievementCategories.map((category) => (
+                <Panel
+                  key={category.id}
+                  className={getFilledClassName('codex-progress-row', getCodexPercent(category.current, category.total))}
+                  style={getFillStyle(getCodexPercent(category.current, category.total))}
+                >
+                  <div className="progress-label">
+                    <span>{category.label}</span>
+                    <strong>
+                      {category.current.toLocaleString()} / {category.total.toLocaleString()}
+                    </strong>
+                  </div>
+                  <div className="progress-track">
+                    <div className="progress-fill" style={{ width: `${getCodexPercent(category.current, category.total)}%` }} />
+                  </div>
+                  <small>{getCodexPercentLabel(category.current, category.total)}</small>
+                </Panel>
+              ))}
+            </div>
+          )}
         </section>
       )}
     </div>

@@ -7,9 +7,9 @@ export interface CodexOverviewStat {
   label: string;
   value: string;
   current: number;
-  total: number;
-  percent: number;
-  percentLabel: string;
+  total: number | null;
+  percent: number | null;
+  percentLabel: string | null;
 }
 
 export interface CodexCategoryProgress {
@@ -25,9 +25,9 @@ export interface CodexRecordRow {
   unique: number;
   uniqueTotal: number;
   value: number;
-  valueTotal: number;
-  percent: number;
-  percentLabel: string;
+  valueTotal: number | null;
+  percent: number | null;
+  percentLabel: string | null;
 }
 
 export interface CodexSummary {
@@ -39,29 +39,13 @@ export interface CodexSummary {
 
 const questTotals = {
   completed: 0,
-  total: 0,
   points: 0,
-  pointTotal: 0,
 };
 
 const combatLevelTotal = 138;
-const achievementPointsPerAchievement = 10;
-const activityCompletionMilestonePerActivity = 10;
 
-const achievementCategories: CodexCategoryProgress[] = [
-  { id: 'exploration', label: 'Exploration', current: 0, total: 8 },
-  { id: 'combat', label: 'Combat', current: 0, total: 8 },
-  { id: 'skills', label: 'Skills', current: 0, total: 8 },
-  { id: 'collection', label: 'Collection', current: 0, total: 8 },
-  { id: 'account', label: 'Account', current: 0, total: 8 },
-];
-
-const collectionCategories: CodexCategoryProgress[] = [
-  { id: 'collector_items', label: 'Collector Items', current: 0, total: 3800 },
-  { id: 'mounts', label: 'Mounts', current: 0, total: 80 },
-  { id: 'pets', label: 'Pets', current: 0, total: 60 },
-  { id: 'skins', label: 'Skins', current: 0, total: 60 },
-];
+const achievementCategories: CodexCategoryProgress[] = [];
+const collectionCategories: CodexCategoryProgress[] = [];
 
 const formatRatio = (current: number, total: number) => `${current.toLocaleString()} / ${total.toLocaleString()}`;
 
@@ -69,11 +53,15 @@ const getProgressTotal = (categories: CodexCategoryProgress[]) => categories.red
 
 const getProgressCurrent = (categories: CodexCategoryProgress[]) => categories.reduce((sum, category) => sum + category.current, 0);
 
-const getPercent = (current: number, total: number) => (total > 0 ? Math.min(100, Math.max(0, (current / total) * 100)) : 0);
+const getPercent = (current: number, total: number | null) =>
+  total && total > 0 ? Math.min(100, Math.max(0, (current / total) * 100)) : null;
 
-const getPercentLabel = (current: number, total: number) => `${getPercent(current, total).toFixed(3)}%`;
+const getPercentLabel = (current: number, total: number | null) => {
+  const percent = getPercent(current, total);
+  return percent === null ? null : `${percent.toFixed(3)}%`;
+};
 
-const createOverviewStat = (label: string, value: string, current: number, total: number): CodexOverviewStat => ({
+const createOverviewStat = (label: string, value: string, current: number, total: number | null): CodexOverviewStat => ({
   label,
   value,
   current,
@@ -89,7 +77,6 @@ const getCurrentActivityLogs = (account: AccountSave) => account.activityLog.fil
 const getActivityCompletionRecord = (account: AccountSave): CodexRecordRow => {
   const validActivityLogs = getCurrentActivityLogs(account);
   const uniqueCompletedActivities = new Set(validActivityLogs.map((entry) => entry.activityName)).size;
-  const valueTotal = activities.length * activityCompletionMilestonePerActivity;
 
   return {
     id: 'activity_completions',
@@ -97,9 +84,9 @@ const getActivityCompletionRecord = (account: AccountSave): CodexRecordRow => {
     unique: uniqueCompletedActivities,
     uniqueTotal: activities.length,
     value: validActivityLogs.length,
-    valueTotal,
-    percent: getPercent(validActivityLogs.length, valueTotal),
-    percentLabel: getPercentLabel(validActivityLogs.length, valueTotal),
+    valueTotal: null,
+    percent: null,
+    percentLabel: null,
   };
 };
 
@@ -164,8 +151,6 @@ const getRecordRows = (account: AccountSave): CodexRecordRow[] => [
   getActivityCompletionRecord(account),
   getExplorationDiscoveryRecord(account),
   getRegionRecord(account),
-  { id: 'boss_kills', label: 'Boss Kills', unique: 0, uniqueTotal: 0, value: 0, valueTotal: 0, percent: 0, percentLabel: '0.000%' },
-  { id: 'dungeon_runs', label: 'Dungeon Runs', unique: 0, uniqueTotal: 0, value: 0, valueTotal: 0, percent: 0, percentLabel: '0.000%' },
 ];
 
 export const getCodexSummary = (account: AccountSave): CodexSummary => {
@@ -177,14 +162,13 @@ export const getCodexSummary = (account: AccountSave): CodexSummary => {
   const completedAchievements = getProgressCurrent(achievementCategories);
   const totalAchievements = getProgressTotal(achievementCategories);
   const achievementPoints = 0;
-  const achievementPointTotal = totalAchievements * achievementPointsPerAchievement;
   const recordRows = getRecordRows(account);
   const uniqueRecords = recordRows.reduce((sum, record) => sum + record.unique, 0);
   const uniqueRecordTotal = recordRows.reduce((sum, record) => sum + record.uniqueTotal, 0);
   const totalRecords = recordRows.reduce((sum, record) => sum + record.value, 0);
-  const recordTotal = recordRows.reduce((sum, record) => sum + record.valueTotal, 0);
   const combatLevel = getCombatLevel(account);
   const totalSkillLevelCap = skills.length * 120;
+  const collectionPercent = getPercent(collectionCurrent, collectionTotal) ?? 0;
 
   return {
     overviewStats: [
@@ -192,14 +176,24 @@ export const getCodexSummary = (account: AccountSave): CodexSummary => {
       createOverviewStat('Total Skill Level', totalSkillLevel.toLocaleString(), totalSkillLevel, totalSkillLevelCap),
       createOverviewStat('Skills at 99', skillsAt99.toLocaleString(), skillsAt99, skills.length),
       createOverviewStat('Skills at 120', skillsAt120.toLocaleString(), skillsAt120, skills.length),
-      createOverviewStat('Total Quests', formatRatio(questTotals.completed, questTotals.total), questTotals.completed, questTotals.total),
-      createOverviewStat('Quest Points', questTotals.points.toLocaleString(), questTotals.points, questTotals.pointTotal),
-      createOverviewStat('Achievements', formatRatio(completedAchievements, totalAchievements), completedAchievements, totalAchievements),
-      createOverviewStat('Achievement Points', achievementPoints.toLocaleString(), achievementPoints, achievementPointTotal),
+      createOverviewStat('Total Quests', questTotals.completed.toLocaleString(), questTotals.completed, null),
+      createOverviewStat('Quest Points', questTotals.points.toLocaleString(), questTotals.points, null),
+      createOverviewStat(
+        'Achievements',
+        totalAchievements > 0 ? formatRatio(completedAchievements, totalAchievements) : completedAchievements.toLocaleString(),
+        completedAchievements,
+        totalAchievements > 0 ? totalAchievements : null,
+      ),
+      createOverviewStat('Achievement Points', achievementPoints.toLocaleString(), achievementPoints, null),
       createOverviewStat('Unique Records', formatRatio(uniqueRecords, uniqueRecordTotal), uniqueRecords, uniqueRecordTotal),
-      createOverviewStat('Records', formatRatio(totalRecords, recordTotal), totalRecords, recordTotal),
-      createOverviewStat('Collection', formatRatio(collectionCurrent, collectionTotal), collectionCurrent, collectionTotal),
-      createOverviewStat('Collection %', `${getPercent(collectionCurrent, collectionTotal).toFixed(3)}%`, collectionCurrent, collectionTotal),
+      createOverviewStat('Records', totalRecords.toLocaleString(), totalRecords, null),
+      createOverviewStat(
+        'Collection',
+        collectionTotal > 0 ? formatRatio(collectionCurrent, collectionTotal) : collectionCurrent.toLocaleString(),
+        collectionCurrent,
+        collectionTotal > 0 ? collectionTotal : null,
+      ),
+      createOverviewStat('Collection %', `${collectionPercent.toFixed(3)}%`, collectionCurrent, collectionTotal > 0 ? collectionTotal : null),
     ],
     collectionCategories,
     recordRows,
@@ -207,6 +201,6 @@ export const getCodexSummary = (account: AccountSave): CodexSummary => {
   };
 };
 
-export const getCodexPercent = (current: number, total: number) => getPercent(current, total);
+export const getCodexPercent = (current: number, total: number) => getPercent(current, total) ?? 0;
 
-export const getCodexPercentLabel = (current: number, total: number) => getPercentLabel(current, total);
+export const getCodexPercentLabel = (current: number, total: number) => getPercentLabel(current, total) ?? '0.000%';

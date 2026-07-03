@@ -160,14 +160,16 @@ Implementation notes:
 
 - `ViewId` should use `codex` rather than `progress`.
 - Bottom navigation label should be `Codex`.
-- Codex summary values should be derived from existing account state where possible.
-- Systems not implemented yet, such as quests, achievements, and real collection ownership, may expose placeholder totals and zero completed counts until save-backed data exists.
+- Codex summary values should be derived from existing account state and current content definitions where possible.
+- Systems not implemented yet, such as quests, achievements, and real collection ownership, must not expose fake totals. They should show zero counters and empty detail states until save-backed data exists.
 - Collection percentage should be displayed with three decimal places to support thousands of collectibles.
 - Save backup/export/import needs a future Settings home if it is removed from the old Progress screen.
 - Codex tiles should expose a numeric percentage and a visual fill effect from the same derived `current / total` values.
 - The current fill effect is CSS-only: `filled-card` uses the `--fill` CSS variable plus animated pseudo-elements. `empty-fill` disables the layer at 0%.
 - Codex supports horizontal touch swipes across the body to move between Overview, Collection, Records, and Achievements.
 - Record calculations must filter to current content definitions. Activity logs count only names matching current activities from `src/data/activities.ts`; region progress counts only current Explore activity IDs.
+- `Unique Records` is a bounded completion-style aggregate across current record lines. `Records` is an unbounded statistic counter across all current record totals and should be displayed as a plain number, not as `current / total`.
+- Individual record rows may mix bounded and unbounded totals. Activity completions are unbounded repeat counters; exploration discoveries and regions explored are bounded by current content definitions.
 - The Account screen's region list also filters stale region progress so removed activity IDs cannot crash rendering.
 
 ## Universal Requirements And Rewards Architecture
@@ -588,8 +590,8 @@ Important implementation details:
   - Collection / Collection %
 - Combat level, total level, and skill milestone counts are derived from account skill XP.
 - Records derive from existing account state: completed activities, exploration discoveries, and explored regions.
-- Collection totals are placeholder structure for the future collection save model: 3,800 Collector Items, 80 Mounts, 60 Pets, and 60 Skins for 4,000 total.
-- Achievement totals are placeholder structure: five starter categories with eight achievements each.
+- Superseded on 2026-07-03: Collection totals are no longer placeholder structure. Collection categories remain empty until real collection content and save-backed ownership exist.
+- Superseded on 2026-07-03: Achievement totals are no longer placeholder structure. Achievement categories remain empty until the achievement system has real content and save-backed completion state.
 - Collection percentage is formatted with three decimal places.
 - The old `src/screens/ProgressScreen.tsx` was removed to avoid maintaining two competing progress surfaces.
 
@@ -624,6 +626,45 @@ Files involved:
 - `src/screens/CodexScreen.tsx`
 - `src/screens/ProgressScreen.tsx`
 - `src/styles.css`
+- `project_memory.md`
+- `game_design.md`
+
+### Codex Record Counter Correction
+
+Problem: The Codex Overview showed impossible ratios such as `Records 41 / 30` because repeatable activity completions were treated like bounded completion progress. Collection and achievement tiles also exposed planned placeholder totals even though those modules did not yet have real content or save-backed state.
+
+Successful solution: Split Codex stats into bounded completion values and unbounded statistic counters. `Records` now displays as a plain total counter, while `Unique Records` and finite records such as exploration discoveries keep real `current / total` ratios. Activity completions are unbounded totals. Collection and Achievement categories are empty until those systems have real content definitions.
+
+Why it works: repeatable actions can grow forever, so they should not share the same denominator model as finite content completion. Bounded percentages and fill effects now only appear when the current game data defines a real maximum.
+
+Commands used:
+
+```powershell
+npm run build
+```
+
+```powershell
+npx playwright install chromium
+```
+
+```powershell
+node --input-type=module
+```
+
+Local browser smoke test covered:
+
+- Seeded 22 valid `Explore Old Road` activity logs plus stale removed activity logs.
+- Seeded current Old Road region progress and stale removed region progress.
+- Confirmed Overview shows `Records 41` without a denominator.
+- Confirmed Activity Completions shows `Total 22` without a denominator.
+- Confirmed Exploration Discoveries remains bounded as `18 / 19`.
+- Confirmed Collection and Achievements tabs show empty states instead of placeholder totals.
+- Confirmed no console warnings or errors.
+
+Files involved:
+
+- `src/game/codex.ts`
+- `src/screens/CodexScreen.tsx`
 - `project_memory.md`
 - `game_design.md`
 
