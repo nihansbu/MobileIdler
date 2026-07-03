@@ -115,6 +115,126 @@ Expected module areas:
 - Asset manifests
 - Reusable mobile UI components
 
+## Protected App Shell Boundaries
+
+Design decision added on 2026-07-04: the top bar and bottom navigation are protected app-shell surfaces.
+
+When the user asks for a redesign, layout pass, visual polish, or UI restructuring, the default scope is only the scrollable content body. Do not alter top bar behavior, bottom navigation behavior, app-shell layout, app-shell dimensions, collapse/expand controls, or top/bottom navigation styling unless the user explicitly mentions the top bar, bottom navigation, or app shell.
+
+Implementation implication:
+
+- Treat `src/components/AppShell.tsx` and shell-level CSS as stable infrastructure.
+- Activity, Codex, Account, Skills, and future module screens should redesign their body content within the existing shell.
+- If a future change genuinely requires shell edits, call that out explicitly before implementation.
+
+## Activity And Minigame Architecture Direction
+
+Design decision added on 2026-07-04: Activities should move from a flat tabbed list to a nested content-body flow.
+
+Planned Activity screen structure:
+
+- The main `Activities` screen becomes a category landing page.
+- Category tiles include Explore, Minigames, Combat, Dungeons, Bossing, and future modules.
+- Tapping a category opens a content-body subpage for that module.
+- The Explore subpage lists Explore regions.
+- The Minigames subpage lists all minigames.
+- Tapping a specific activity or minigame should open a detail view with requirements, run data, rewards, drop table, collection status, and a start action.
+
+Minigames are character-executed activities with the same core mechanics as other timed activities:
+
+- Optional requirements through the universal requirement system.
+- RAP cost per run.
+- Fixed run duration.
+- Skill XP rewards through the universal reward system.
+- Drop tables using a general drop definition, not one-off hard-coded reward logic.
+- Collection unlocks for mounts, pets, skins, collector items, and future collection categories.
+
+First planned minigames:
+
+- `Herbalist's Crucible`: Herblore minigame, requirement Herblore 1, 1 hour, 5,000 RAP, Herblore XP plus small Crafting XP. This is the first immediately testable minigame.
+- `Tidepool Trials`: Fishing minigame, requirement Fishing 30, 1 hour, 5,000 RAP, Fishing XP, first test mount at 1/1 drop chance, first test pet at 1/500 drop chance.
+- `Familiar Grove`: Summoning minigame, requirement to be decided, 1 hour, 5,000 RAP, Summoning XP, future summoning-themed collection rewards.
+
+Summoning is kept as a project skill even though it is not an Old School RuneScape skill. It uses the same project XP-rate curve as other skills.
+
+## Collection And Drop Architecture Direction
+
+Design decision added on 2026-07-04: mounts, pets, skins, and collector items are collection entries, not normal inventory items.
+
+Initial collection save direction:
+
+- Collection state should be account-wide.
+- Each collection entry should track ownership, first-obtained timestamp/source where practical, and duplicate copies.
+- The first drop of a collection entry is the important unlock and should count toward Codex collection completion.
+- Duplicate drops should not be discarded. Store them as `copies` for now.
+- Do not add a generic collection-shard currency yet. Later, copies can be turned into a more specific system such as mount skins, pet variants, or entry-specific cosmetics.
+
+Initial drop table direction:
+
+- Activities, minigames, bosses, dungeons, and future modules should share one drop-table model.
+- A drop can unlock a collection entry such as a mount, pet, skin, or collector item.
+- Drop chance should support explicit values such as 1/1 for testing and 1/500 for rare rewards.
+- The UI should show possible drops, owned/missing state, chance, and copies where relevant.
+- Drop results should appear prominently enough in activity logs or completion summaries that rare rewards are visible.
+
+## RAP Economy Direction
+
+Design decision added on 2026-07-04: RAP earning should outpace per-character RAP spending, so the player can fuel multiple workers over time but still needs to choose what to run.
+
+RAP earning reference values:
+
+- Walking: roughly 2 RAP per step, so 10,000 steps is about 20,000 RAP.
+- Work: roughly 10,000 RAP per hour.
+- Reading: roughly 20,000 RAP per hour.
+- Gym or similarly demanding exercise: roughly 30,000 RAP per hour.
+
+RAP spending reference values:
+
+- A typical one-hour in-game character activity should cost about 5,000 RAP.
+- One hour of strong real-life activity can therefore fuel several character-hours, especially after additional character slots are unlocked.
+- Activities should generally last about one hour long-term so the game does not demand constant check-ins.
+- Current prototype durations may stay shorter only when needed for early testing.
+
+## Passive Skill XP Rate Direction
+
+Design decision added on 2026-07-04: passive minigame/activity XP rates should be much slower than active OSRS methods at low levels, because MobileIdler activities run offline and can later run in parallel across multiple characters.
+
+Reference research:
+
+- OSRS uses a steep XP table where level 30 is 13,363 XP, level 50 is 101,333 XP, and level 99 is 13,034,431 XP.
+- OSRS Fishing training can reach roughly 25k-36k XP/hour around trout/salmon levels and higher in optimized methods.
+- OSRS Herblore can be much faster because it is a buyable bankstanding skill, with low-level potion methods already showing tens of thousands of XP/hour or more.
+
+Project decision:
+
+- Do not copy OSRS active rates directly.
+- Use one shared passive XP-rate curve for minigames and similar passive skill activities unless a specific activity later overrides it.
+- Calculate the rate from an exact virtual skill level with intra-level progress, not only whole levels, so rates increase smoothly rather than jumping at level thresholds.
+- Proposed base formula:
+
+```ts
+levelProgress = (exactVirtualLevel - 1) / 119;
+xpPerHour = 500 + 119_500 * levelProgress ** 2;
+```
+
+Approximate main-skill rates:
+
+- Level 1: 500 XP/hour.
+- Level 5: 600 XP/hour.
+- Level 10: 1,200 XP/hour.
+- Level 20: 3,500 XP/hour.
+- Level 30: 7,600 XP/hour.
+- Level 40: 13,300 XP/hour.
+- Level 50: 20,800 XP/hour.
+- Level 70: 40,700 XP/hour.
+- Level 90: 67,300 XP/hour.
+- Level 99: 81,500 XP/hour.
+- Level 120: 120,000 XP/hour.
+
+Secondary skill rewards should start at about 20% of the main-skill rate. Example: `Herbalist's Crucible` grants full Herblore XP and about 20% Crafting XP.
+
+Because the rate uses exact virtual level, Level 5 to Level 10 is not a flat 600 XP/hour followed by a hard jump. The rate rises gradually as XP progresses through the levels.
+
 ## Account And Character Flow
 
 The app should start with local account/save-profile selection rather than immediately entering a character.
@@ -510,6 +630,44 @@ Get-Content -Raw -LiteralPath 'assets\manifests\asset-manifest.json' | ConvertFr
 - Save stability must be designed before large gameplay expansion starts.
 
 ## Successful Solutions
+
+### Minigame And Passive XP Planning
+
+Problem: The next activity module needs minigames, collection drops, and passive skill XP. A first proposal of 15,000 XP/hour at Level 1 was too fast for a passive offline game because it would push early levels too quickly.
+
+Successful solution: Designed minigames as first-class timed activities with requirements, RAP cost, duration, skill XP rewards, shared drop tables, and collection unlocks. Added a conservative passive XP-rate model based on exact virtual skill level rather than whole-level jumps.
+
+Final design decisions:
+
+- Main Activities screen should become a category landing page; detailed lists move into module subpages.
+- Top bar and bottom navigation are protected shell surfaces and should not be changed during body redesigns unless explicitly requested.
+- First planned minigames are `Herbalist's Crucible`, `Tidepool Trials`, and `Familiar Grove`.
+- Minigame runs should generally last one hour and cost about 5,000 RAP.
+- `Herbalist's Crucible` is the first testable minigame at Herblore 1 and grants Herblore XP plus about 20% Crafting XP.
+- `Tidepool Trials` is gated at Fishing 30 and will test collection drops with a 1/1 mount and a 1/500 pet.
+- Mounts, pets, skins, and collector items are account-wide collection entries, not normal inventory.
+- Duplicate collection drops are stored as `copies` for now.
+- A generic collection-shard currency is intentionally not added yet; later copies may become entry-specific skins, variants, or cosmetics.
+- Passive XP-rate formula:
+
+```ts
+levelProgress = (exactVirtualLevel - 1) / 119;
+xpPerHour = 500 + 119_500 * levelProgress ** 2;
+```
+
+Why it works: OSRS active training rates are much too fast for a passive offline game with future parallel characters. The selected curve starts slowly, scales smoothly with exact level progress, reaches about 81,500 XP/hour around Level 99, and caps at 120,000 XP/hour at Level 120.
+
+Reference sources checked:
+
+- OSRS XP table: https://oldschoolrunescape.fandom.com/wiki/Experience
+- OSRS Fishing training: https://oldschoolrunescape.fandom.com/wiki/Pay-to-play_Fishing_training
+- OSRS Herblore training: https://oldschoolrunescape.fandom.com/wiki/Herblore_training
+- Theoatrix Herblore guide for low-level Herblore context: https://www.theoatrix.net/post/updated-1-99-herblore-guide
+
+Files involved:
+
+- `project_memory.md`
+- `game_design.md`
 
 ### GitHub Pages Deployment Pipeline
 

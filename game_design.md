@@ -104,11 +104,13 @@ Initial simple version:
 Planned direction:
 
 - Add a Deeds or Activities system for real-world actions.
-- Example deed: walk 10,000 steps and gain 10,000 RAP.
-- Example deed: exercise for one hour and gain around 20,000 RAP.
+- Walking should roughly grant 2 RAP per step, so 10,000 steps is about 20,000 RAP.
+- Work or similar medium-value real-life effort should grant about 10,000 RAP per hour.
+- Reading should grant about 20,000 RAP per hour.
+- Gym or similarly demanding exercise should grant about 30,000 RAP per hour.
 - Different real-life activities can reward different RAP amounts based on difficulty or value.
 - A rough economy baseline is that one in-game activity hour costs about 5,000 RAP.
-- A rough real-life earning baseline is that one hour of meaningful real-life activity earns about 20,000 RAP.
+- A rough real-life earning baseline is that one hour of meaningful real-life activity earns more RAP than one character can spend in one hour. This lets the player fuel several character-hours over time, especially after unlocking more character slots.
 - RAP is used both to run activities and to unlock or purchase newly available content.
 - Example: reaching a skill requirement may only unlock the option to buy an item, resource type, activity, or feature; the final unlock can still require RAP spending.
 
@@ -247,6 +249,7 @@ Activities are the broad umbrella term for everything a character can do in the 
 Current activity categories:
 
 - Exploration
+- Minigames
 - Skill training
 - Dungeons
 - Bossing
@@ -264,7 +267,48 @@ Design expectations:
 - Activities can be gated by combat level, account skill levels, region progress, achievements, account upgrades, discovered points of interest, or collected items.
 - Activity lists should remain visible even if no character is idle or no character exists yet. Availability should disable Start actions, not hide the activity catalog.
 - Activities should be organized by modules over time. The first real module is Explore.
+- The Activities screen should become a category landing page rather than a single tabbed list. Category tiles lead to subpages such as Explore, Minigames, Combat, Dungeons, and Bossing.
+- Subpages should carry the detailed content. For example, Explore lists regions, Minigames lists minigames, and a minigame detail view shows requirements, run cost, duration, XP rewards, drop table, owned/missing drops, copies, and start controls.
 - Combat level requirements are written and checked as whole levels, such as Combat Level 3. The combat level display can still show decimals for motivation.
+
+## Minigames
+
+Minigames are repeatable character activities inspired by RuneScape minigames. They should feel like targeted side activities with their own reward pools, rare drops, and collection goals.
+
+Core minigame rules:
+
+- Minigames use the same account-wide requirement and reward architecture as other activities.
+- Minigames have hard requirements such as skill levels.
+- Minigame runs cost RAP.
+- Minigame runs should generally last about one hour long-term.
+- A normal one-hour minigame run should cost about 5,000 RAP.
+- Minigames can grant one or more skill XP rewards.
+- Minigames can roll drop tables with minigame-specific collection rewards.
+- Minigame-specific loot should be visible before running the minigame.
+
+First planned minigames:
+
+- `Herbalist's Crucible`
+  - Requirement: Herblore 1.
+  - Duration: 1 hour.
+  - Cost: 5,000 RAP.
+  - Rewards: Herblore XP plus a small amount of Crafting XP.
+  - Purpose: first immediately testable minigame.
+- `Tidepool Trials`
+  - Requirement: Fishing 30.
+  - Duration: 1 hour.
+  - Cost: 5,000 RAP.
+  - Rewards: Fishing XP.
+  - Drops: first test mount at 1/1 chance, first test pet at 1/500 chance.
+  - Purpose: test collection unlocks, owned/missing display, rare pet drops, and duplicate copies.
+- `Familiar Grove`
+  - Requirement: to be decided, likely Summoning-based.
+  - Duration: 1 hour.
+  - Cost: 5,000 RAP.
+  - Rewards: Summoning XP.
+  - Purpose: establish Summoning as a supported project skill activity.
+
+Summoning stays in the game even though it is not an Old School RuneScape skill. It uses the same project-wide passive XP-rate model as other skills.
 
 ## Exploration
 
@@ -403,6 +447,11 @@ Design direction:
 - The player should be able to see collected vs. missing drops.
 - Some drops may unlock future content directly or contribute to achievement gates.
 - Very rare drops should exist for long-tail goals.
+- Mounts, pets, skins, and collector items are collection entries rather than normal inventory items.
+- The first time a collection entry drops, it unlocks that entry and counts toward Codex completion.
+- Duplicate drops should not be lost. For now they should be stored as `copies`.
+- Copies are not yet a spendable currency. Later, copies can become useful through entry-specific systems such as mount skins, pet variants, cosmetics, or upgrade paths.
+- Avoid adding a generic collection-shard currency for now.
 
 Mount collection is an early example collection category:
 
@@ -412,6 +461,14 @@ Mount collection is an early example collection category:
 - 25 mounts achievement
 - 50 mounts achievement
 - Category achievements, such as owning 5 raid mounts
+
+Initial drop table direction:
+
+- Drop tables should be reusable across minigames, bosses, dungeons, Explore, and future activity modules.
+- A drop table entry can unlock a collection item such as a mount, pet, skin, or collector item.
+- Drop chances should support explicit odds such as 1/1 for testing and 1/500 for rare rewards.
+- Player-facing detail views should show possible drops, drop chance, owned/missing state, and copies where useful.
+- Rare drops should be visible in completion summaries or activity logs.
 
 ## Gating And Unlocks
 
@@ -522,6 +579,18 @@ Planned:
 - XP continues past level 120 up to 200,000,000 XP per skill.
 - XP should follow the RuneScape XP curve, with level 99 around 13,034,431 XP and level 120 around 104,273,167 XP.
 - XP is the source of truth; visible level is derived from XP.
+- Passive activity XP rates should be slower than active Old School RuneScape methods at low levels because MobileIdler runs offline and can later run multiple characters in parallel.
+- Passive activity XP rates should use a smooth exact-level curve, not hard jumps at whole levels.
+- Proposed shared passive main-skill rate:
+
+```ts
+levelProgress = (exactVirtualLevel - 1) / 119;
+xpPerHour = 500 + 119_500 * levelProgress ** 2;
+```
+
+- Approximate main-skill rates: Level 1 is 500 XP/hour, Level 10 is about 1,200 XP/hour, Level 20 is about 3,500 XP/hour, Level 30 is about 7,600 XP/hour, Level 50 is about 20,800 XP/hour, Level 70 is about 40,700 XP/hour, Level 99 is about 81,500 XP/hour, and Level 120 is 120,000 XP/hour.
+- Secondary skill rewards should start at about 20% of the main-skill rate.
+- The formula should use an exact virtual level with intra-level progress, for example Level 5.37, so the rate gradually increases from Level 5 to Level 10 rather than staying flat and jumping.
 - All skills should be visible from the start on a dedicated Skills screen.
 - Invention, Necromancy, and Sailing are visible but locked until account total level 800.
 - Locked skills still count toward total level.
@@ -743,6 +812,7 @@ Design priorities:
 - Top bar and bottom navigation should stay visible while the body content scrolls.
 - Top bar and bottom navigation should be separately collapsible to free more body space on mobile.
 - Top bar and bottom navigation collapse/expand should use matching thin arrow rows.
+- Top bar and bottom navigation are protected app-shell surfaces. When discussing redesigns or UI changes, the default scope is only the content body unless the user explicitly mentions the top bar, bottom navigation, or app shell.
 - The top bar plus button is the current prototype RAP gain action.
 - The expanded top bar should include compact active-character information: character icon, name, race, and class.
 - Account-wide combat level should be displayed as its own top-bar stat with an icon and number, not as part of the character text.
@@ -895,6 +965,19 @@ Current MVP status:
 - Collection and Achievement tabs intentionally show empty states until save-backed collection and achievement content exists.
 - Inventory, items, quests, dungeons, bossing, and save-backed achievements are not implemented yet.
 
+Next implementation plan:
+
+1. Protect the app shell in code comments or component documentation so future body redesigns do not accidentally alter the top bar or bottom navigation.
+2. Extend core types for activity modules, minigames, drop tables, and collection entries.
+3. Add account-wide collection save state for mounts, pets, skins, and collector items with ownership and copies.
+4. Add a shared drop-table resolver that can unlock collection entries and increment copies on duplicates.
+5. Add exact virtual-level helper and shared passive XP-rate helper.
+6. Add minigame content definitions for `Herbalist's Crucible`, `Tidepool Trials`, and `Familiar Grove`.
+7. Rework the Activities content body into a category landing page plus module subpages, without changing the top bar or bottom navigation.
+8. Add Minigames list and minigame detail/start views with requirements, RAP cost, duration, XP rewards, drop table, owned/missing status, and copies.
+9. Feed real collection totals and owned counts into Codex Collection once collection content exists.
+10. Test with Herblore 1 minigame unlocked, Fishing 30 minigame locked, first mount 1/1 drop, pet 1/500 drop, duplicate copies, Codex updates, offline completion, and stale-content filtering.
+
 Later:
 
 - Deeds system for real-life activities.
@@ -939,6 +1022,11 @@ Later:
 - Each class starts with two passive abilities.
 - Race selection should start as a simple data-driven wizard; richer race-specific art can be layered in later.
 - Early UI should stay minimal and alpha/testing-friendly until mechanics and content stabilize.
+- Top bar and bottom navigation are protected app-shell UI. Redesign requests affect only the content body unless the user explicitly names the top bar, bottom navigation, or app shell.
+- Activities should use a nested content-body flow: category landing page first, then module subpages, then detail views.
+- Minigames are a first-class activity module with requirements, RAP cost, duration, skill XP, drop tables, and collection rewards.
+- One-hour activities should generally cost about 5,000 RAP.
+- RAP earning should generally outpace one character's RAP spending rate, with examples around 20,000 RAP for 10,000 walking steps, 10,000 RAP per work hour, 20,000 RAP per reading hour, and 30,000 RAP per gym hour.
 - Character slots are a major progression/QoL reward because each extra active character increases account throughput.
 - RAP is account-wide.
 - Achievements are account-wide.
@@ -949,6 +1037,7 @@ Later:
 - Combat is passive: the player chooses a target/activity, then character power determines speed, danger, and rewards.
 - Boss and dungeon loot tables should be visible in the UI.
 - Collection progress should show obtained and missing drops.
+- Collection duplicates should be stored as copies for now and may later become entry-specific skins, variants, or cosmetics.
 - Ultra-rare drops, especially mounts, are important long-term goals.
 - Achievements can unlock gameplay content, including special dungeons and account-wide upgrades.
 - Progression should be gated through combat level, skill levels, regions, achievements, item collection, boss kills, and RAP spending.
